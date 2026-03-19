@@ -121,7 +121,7 @@ services:
     volumes:
       - ../admin_panel/config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ../admin_panel/config/nginx/site.conf:/etc/nginx/conf.d/site.conf:ro
-      - ../admin_panel/staticfiles:/data/staticfiles:ro
+      - static_volume:/data/staticfiles:ro
       - ../admin_panel/html:/data/html:ro
     depends_on:
       - movies_django

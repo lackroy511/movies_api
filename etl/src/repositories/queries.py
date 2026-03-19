@@ -1,60 +1,76 @@
-UPDATED_MOVIE_IDS = """
-SELECT
-    id
-FROM
-    content.film_work
-WHERE
-    updated_at > %s
-ORDER BY
-    id
-LIMIT
-    %s OFFSET %s
-"""
+UPDATED_MOVIES = """
+WITH changed_films AS (
+    SELECT
+        fw.id,
+        fw.title,
+        fw.description,
+        fw.creation_date,
+        fw.rating,
+        fw.type,
+        fw.created_at,
+        fw.updated_at
+    FROM content.film_work fw
+    WHERE fw.updated_at > %s
+       OR EXISTS (
+            SELECT 1
+            FROM content.person_film_work pfw
+            JOIN content.person p ON p.id = pfw.person_id
+            WHERE pfw.film_work_id = fw.id
+              AND GREATEST(p.updated_at, pfw.updated_at) > %s
+       )
+       OR EXISTS (
+            SELECT 1
+            FROM content.genre_film_work gfw
+            JOIN content.genre g ON g.id = gfw.genre_id
+            WHERE gfw.film_work_id = fw.id
+              AND g.updated_at > %s
+       )
+),
 
-MOVIE_IDS_FOR_UPDATED_PERSONS = """
-SELECT
-    DISTINCT film_work_id AS id
-FROM
-    content.person_film_work AS pfw
-    JOIN content.person AS p ON p.id = pfw.person_id
-WHERE
-    p.updated_at > %s
-ORDER BY
-    film_work_id
-LIMIT
-    %s OFFSET %s;
-"""
+person_rows AS (
+    SELECT DISTINCT
+        pfw.film_work_id,
+        p.id,
+        p.full_name,
+        pfw.role
+    FROM content.person_film_work pfw
+    JOIN content.person p ON p.id = pfw.person_id
+    JOIN changed_films cf ON cf.id = pfw.film_work_id
+),
 
-MOVIE_IDS_FOR_UPDATED_PERSON_ROLES = """
-SELECT
-    DISTINCT film_work_id AS id
-FROM
-    content.person_film_work
-WHERE
-    updated_at > %s
-ORDER BY
-    film_work_id
-LIMIT
-    %s OFFSET %s;
-"""
+persons_agg AS (
+    SELECT
+        film_work_id,
+        jsonb_agg(
+            jsonb_build_object(
+                'id', id,
+                'full_name', full_name,
+                'role', role
+            )
+        ) AS persons
+    FROM person_rows
+    GROUP BY film_work_id
+),
 
-MOVIE_IDS_FOR_UPDATED_GENRES = """
-SELECT
-    DISTINCT film_work_id AS id
-FROM
-    content.genre_film_work AS gfw
-    JOIN content.genre AS g ON g.id = gfw.genre_id
-WHERE
-    g.updated_at > %s
-ORDER BY
-    film_work_id
-LIMIT
-    %s OFFSET %s;
-"""
+genre_rows AS (
+    SELECT DISTINCT
+        gfw.film_work_id,
+        g.name
+    FROM content.genre_film_work gfw
+    JOIN content.genre g ON g.id = gfw.genre_id
+    JOIN changed_films cf ON cf.id = gfw.film_work_id
+),
 
-MOVIES_BY_IDS = """
+genres_agg AS (
+    SELECT
+        film_work_id,
+        jsonb_agg(name) AS genres
+    FROM genre_rows
+    GROUP BY film_work_id
+)
+
 SELECT
-    fw.id AS id,
+    fw.id,
     fw.title,
     fw.description,
     fw.creation_date,
@@ -62,26 +78,11 @@ SELECT
     fw.type,
     fw.created_at,
     fw.updated_at,
-    COALESCE(
-        jsonb_agg(
-            DISTINCT jsonb_build_object(
-                'id', p.id,
-                'full_name', p.full_name,
-                'role', pfw.role
-            )
-        ) FILTER (WHERE p.id IS NOT NULL),
-        '[]' :: jsonb
-    ) AS persons,
-    COALESCE(
-        jsonb_agg(DISTINCT g.name) FILTER (WHERE g.id IS NOT NULL),
-        '[]' :: jsonb
-    ) AS genres
-FROM
-    content.film_work fw
-    LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id
-    LEFT JOIN content.person p ON p.id = pfw.person_id
-    LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
-    LEFT JOIN content.genre g ON g.id = gfw.genre_id
-WHERE fw.id = ANY(%s)
-GROUP BY fw.id;
+    COALESCE(pa.persons, '[]'::jsonb) AS persons,
+    COALESCE(ga.genres, '[]'::jsonb) AS genres
+FROM changed_films fw
+LEFT JOIN persons_agg pa ON pa.film_work_id = fw.id
+LEFT JOIN genres_agg ga ON ga.film_work_id = fw.id
+ORDER BY fw.id
+LIMIT %s OFFSET %s;
 """

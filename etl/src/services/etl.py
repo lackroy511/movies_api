@@ -39,12 +39,15 @@ class ETLService:
                     datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f") + "+00"
                 )
                 self.is_first_iter = False
+                start = time.perf_counter()
 
             to_load = self._get_movies_to_load(last_updated)
             if not to_load:
                 self.is_first_iter = True
                 self.psql_offset = 0
                 self.state.set_state(self.STATE_KEY, new_last_updated)
+                duration = time.perf_counter() - start
+                print(f"Процесс ETL завершен за {duration:.3f} сек")
                 time.sleep(10)
                 continue
 
@@ -55,8 +58,4 @@ class ETLService:
             
     def _get_movies_to_load(self, last_updated: str) -> list[MovieDTO]:
         query_params = (last_updated, self.batch_size, self.psql_offset)
-        ids = set(self.psql_repo.get_upd_movie_ids(*query_params))
-        ids.update(self.psql_repo.get_movie_ids_for_upd_persons(*query_params))
-        ids.update(self.psql_repo.get_movie_ids_for_upd_person_roles(*query_params))
-        ids.update(self.psql_repo.get_movie_ids_for_upd_genres(*query_params))
-        return self.psql_repo.get_movies_by_ids([item.id for item in ids])
+        return self.psql_repo.get_updated_movies(*query_params)

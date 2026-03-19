@@ -12,11 +12,6 @@ class PersonRole(str, Enum):
 
 
 @dataclass(frozen=True)
-class MovieIdDTO:
-    id: UUID
-
-
-@dataclass(frozen=True)
 class MovieDTO:
     id: UUID
     title: str
