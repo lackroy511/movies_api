@@ -1,8 +1,8 @@
 import json
 from dataclasses import asdict
 
-from src.dto.elastic_dto import DocMetaDataDTO, MetaDataDTO, MovieDocDTO, PersonDTO
-from src.dto.psql_dto import MovieDTO, PersonRole
+from src_etl.dto.elastic_dto import DocMetaDataDTO, MetaDataDTO, MovieDocDTO, PersonDTO
+from src_etl.dto.psql_dto import MovieDTO, PersonRole
 
 
 class ToElasticDataTransformer:

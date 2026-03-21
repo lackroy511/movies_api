@@ -1,4 +1,23 @@
 services:
+  nginx:
+    image: nginx:1.29.5
+    container_name: movies_nginx
+    volumes:
+      - ../admin_panel/config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../admin_panel/config/nginx/site.conf:/etc/nginx/conf.d/site.conf:ro
+      - static_volume:/data/staticfiles:ro
+      - ../admin_panel/html:/data/html:ro
+    depends_on:
+      - movies_django
+    ports:
+      - 80:80
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
   movies_django:
     container_name: movies_django
     build:
@@ -29,7 +48,7 @@ services:
     build:
       context: ../etl/
     command: >
-      sh -c "sleep 5 && python main.py"
+      sh -c "sleep 5 && python src/main.py"
     volumes:
       - etl_logs:/app/logs
     env_file:
@@ -47,6 +66,27 @@ services:
         condition: service_healthy
       movies_django:
         condition: service_started
+  
+  movies_api:
+    container_name: movies_api
+    build:
+      context: ../api/
+    command: >
+      sh -c "python src/main.py"
+    env_file:
+      - ../.env
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    depends_on:
+      movies_elastic:
+        condition: service_healthy
+      movies_redis:
+        condition: service_healthy
+      
 
   movies_database:
     image: postgres:17
@@ -115,24 +155,20 @@ services:
       movies_elastic:
         condition: service_healthy
 
-  nginx:
-    image: nginx:1.29.5
-    container_name: movies_nginx
-    volumes:
-      - ../admin_panel/config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../admin_panel/config/nginx/site.conf:/etc/nginx/conf.d/site.conf:ro
-      - static_volume:/data/staticfiles:ro
-      - ../admin_panel/html:/data/html:ro
-    depends_on:
-      - movies_django
-    ports:
-      - 80:80
+  movies_redis:
+    container_name: movies_redis
+    image: redis:8
     restart: unless-stopped
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "2"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   movies_database:

@@ -2,11 +2,11 @@ import logging
 import time
 from datetime import datetime, timezone
 
-from src.dto.psql_dto import MovieDTO
-from src.repositories.elastic_repo import ElasticRepository
-from src.repositories.psql_repo import PSQLRepository
-from src.transform.psql_to_es import ToElasticDataTransformer
-from src.utils.state import State
+from src_etl.dto.psql_dto import MovieDTO
+from src_etl.repositories.elastic_repo import ElasticRepository
+from src_etl.repositories.psql_repo import PSQLRepository
+from src_etl.transform.psql_to_es import ToElasticDataTransformer
+from src_etl.utils.state import State
 
 log = logging.getLogger(__name__)
 
@@ -39,15 +39,12 @@ class ETLService:
                     datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f") + "+00"
                 )
                 self.is_first_iter = False
-                start = time.perf_counter()
 
             to_load = self._get_movies_to_load(last_updated)
             if not to_load:
                 self.is_first_iter = True
                 self.psql_offset = 0
                 self.state.set_state(self.STATE_KEY, new_last_updated)
-                duration = time.perf_counter() - start
-                print(f"Процесс ETL завершен за {duration:.3f} сек")
                 time.sleep(10)
                 continue
 

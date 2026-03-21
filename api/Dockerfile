@@ -2,7 +2,7 @@ FROM python:3.14-slim-trixie
 
 USER root
 
-EXPOSE 8000
+EXPOSE 8010
 
 WORKDIR /app
 
@@ -13,7 +13,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH="/app"
 
-RUN apt-get update && apt-get install -y gettext
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 COPY ./.python-version ./.python-version
@@ -23,11 +22,8 @@ RUN uv sync
 
 COPY . .
 
-RUN python manage.py collectstatic --noinput
-RUN python manage.py compilemessages -l en -l ru
-
 RUN groupadd -r appuser && useradd -r -g appuser appuser
-RUN mkdir -p /app/staticfiles /app/media \
-    && chown -R appuser:appuser /app/staticfiles /app/media
+RUN mkdir -p /app/logs /app/state \
+    && chown -R appuser:appuser /app/logs /app/state
 
 USER appuser

@@ -7,8 +7,8 @@ from psycopg.cursor import Cursor
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from src.config.settings import settings
-from src.utils.backoff import Backoff
+from src_etl.config.settings import settings
+from src_etl.utils.backoff import Backoff
 
 pool = ConnectionPool(
     settings.psql_dsn,

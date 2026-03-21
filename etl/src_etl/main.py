@@ -1,14 +1,14 @@
 import logging
 
-from src.config.settings import settings
-from src.config.logger import configure_logging
-from src.db.elastic_db import ElasticConnection
-from src.db.psql_db import PSQLConnection, pool
-from src.repositories.elastic_repo import ElasticRepository
-from src.repositories.psql_repo import PSQLRepository
-from src.services.etl import ETLService
-from src.transform.psql_to_es import ToElasticDataTransformer
-from src.utils.state import JsonFileStorage, State
+from src_etl.config.settings import settings
+from src_etl.config.logger import configure_logging
+from src_etl.db.elastic_db import ElasticConnection
+from src_etl.db.psql_db import PSQLConnection, pool
+from src_etl.repositories.elastic_repo import ElasticRepository
+from src_etl.repositories.psql_repo import PSQLRepository
+from src_etl.services.etl import ETLService
+from src_etl.transform.psql_to_es import ToElasticDataTransformer
+from src_etl.utils.state import JsonFileStorage, State
 
 configure_logging()
 log = logging.getLogger(__name__)

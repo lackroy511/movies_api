@@ -1,6 +1,6 @@
-from src.db.psql_db import PSQLConnection
-from src.dto.psql_dto import MovieDTO
-from src.repositories.queries import UPDATED_MOVIES
+from src_etl.db.psql_db import PSQLConnection
+from src_etl.dto.psql_dto import MovieDTO
+from src_etl.repositories.queries import UPDATED_MOVIES
 
 
 class PSQLRepository:

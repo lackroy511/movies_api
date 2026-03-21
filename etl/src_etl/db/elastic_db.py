@@ -1,7 +1,7 @@
 import requests
 from requests.exceptions import ConnectionError, ConnectTimeout
 
-from src.utils.backoff import Backoff
+from src_etl.utils.backoff import Backoff
 
 
 class ElasticServerError(Exception):

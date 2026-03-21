@@ -1,4 +1,4 @@
-from src.db.elastic_db import ElasticConnection
+from src_etl.db.elastic_db import ElasticConnection
 
 
 class ElasticRepository:

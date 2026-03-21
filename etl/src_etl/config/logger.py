@@ -2,7 +2,7 @@ import logging
 import logging.handlers
 import os
 
-from src.config.settings import settings
+from src_etl.config.settings import settings
 
 log = logging.getLogger(__name__)
 
