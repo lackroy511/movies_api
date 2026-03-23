@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     db_port: int
 
     elastic_base_url: str = "http://localhost:9200"
-    elastic_index_name: str = "movies"
+    elastic_movies_index_name: str = "movies"
 
     etl_state_file: str = "etl_state.json"
 

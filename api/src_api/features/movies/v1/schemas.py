@@ -1,9 +1,9 @@
-from dataclasses import dataclass
 from uuid import UUID
 
+from pydantic import BaseModel
 
-@dataclass
-class Movie:
+
+class Movie(BaseModel):
     id: UUID
     title: str
     description: str | None
@@ -17,7 +17,6 @@ class Movie:
     writers: list[Person]
 
 
-@dataclass
-class Person:
+class Person(BaseModel):
     id: UUID
     name: str

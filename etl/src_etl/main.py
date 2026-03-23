@@ -19,7 +19,7 @@ def main() -> None:
     psql_repo = PSQLRepository(psql_conn)
     elastic_conn = ElasticConnection(settings.elastic_base_url)
     elastic_repo = ElasticRepository(elastic_conn)
-    data_transformer = ToElasticDataTransformer(settings.elastic_index_name)
+    data_transformer = ToElasticDataTransformer(settings.elastic_movies_index_name)
     storage = JsonFileStorage(settings.etl_state_file)
     state = State(storage)
     etl = ETLService(
