@@ -3,7 +3,7 @@ from uuid import UUID
 
 
 @dataclass
-class Movie:
+class MovieDTO:
     id: UUID
     title: str
     description: str | None

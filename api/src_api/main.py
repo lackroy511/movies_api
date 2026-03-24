@@ -22,7 +22,7 @@ async def unexpected_error_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=500,
-        content={"detail": "Unexpected error"},
+        content={"detail": "Неизвестная ошибка"},
     )
 
 

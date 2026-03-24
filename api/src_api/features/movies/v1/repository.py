@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch
@@ -7,16 +7,16 @@ from fastapi import Depends
 
 from src_api.core.config.settings import settings
 from src_api.core.db.elastic_db import get_elastic_client
-from src_api.features.movies.v1.dto import Movie
+from src_api.features.movies.v1.dto import MovieDTO
 
 
 class BaseMoviesRepo(ABC):
     @abstractmethod
-    async def get_by_id(self, id: UUID) -> Movie | None:
+    async def get_by_id(self, id: UUID) -> MovieDTO | None:
         pass
 
     @abstractmethod
-    async def get_by_filter(self, *args: Any, **kwargs: Any) -> list[Movie]:  # noqa: ANN401
+    async def get_by_filter(self) -> list[MovieDTO]:
         pass
 
 
@@ -25,7 +25,7 @@ class MoviesElasticRepo(BaseMoviesRepo):
         self.index_name = index_name
         self.client = client
 
-    async def get_by_id(self, id: UUID) -> Movie | None:
+    async def get_by_id(self, id: UUID) -> MovieDTO | None:
         result = await self.client.search(
             index=self.index_name,
             query={
@@ -35,12 +35,15 @@ class MoviesElasticRepo(BaseMoviesRepo):
             },
         )
         if result.body["hits"]["hits"]:
-            return Movie(**result["hits"]["hits"][0]["_source"])
-        
+            return MovieDTO(**result["hits"]["hits"][0]["_source"])
+
         return None
 
-    async def get_by_filter(self) -> list[Movie]:
-        return [Movie(**{})]
+    async def get_by_filter(self) -> list[MovieDTO]:
+        result = await self.client.search(
+            index=self.index_name,
+        )
+        return [MovieDTO(**movie["_source"]) for movie in result.body["hits"]["hits"]]
 
 
 class MoviesRedisRepo(BaseMoviesRepo):
