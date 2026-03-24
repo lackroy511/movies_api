@@ -1,3 +1,4 @@
+from src_api.features.shared.schemas import PaginatedResponse
 from dataclasses import asdict
 from typing import Annotated, Literal
 from uuid import UUID
@@ -21,15 +22,22 @@ async def get_movies_list(
     sort: SortByType | None = Query(None, description="Sort by field"),  # noqa: B008
     genre: str | None = Query(None, description="Filter by genre name"),
     search: str | None = Query(None, description="Full text search"),
-) -> list[MovieResponse]:
-    movies = await movies_service.get_list(
+) -> PaginatedResponse:
+    movies, total = await movies_service.get_list(
         page_number,
         page_size,
         sort,
         genre.strip() if genre else None,
         search.strip() if search else None,
     )
-    return [MovieResponse(**asdict(movie)) for movie in movies]
+    return PaginatedResponse(
+        total=total,
+        page_number=page_number,
+        page_size=page_size,
+        has_next=True if page_number * page_size < total else False,
+        has_prev=True if page_number > 1 and page_number <= total else False,
+        items=[MovieResponse(**asdict(movie)) for movie in movies],
+    ) 
 
 
 @router.get("/movies/{movie_id:uuid}")

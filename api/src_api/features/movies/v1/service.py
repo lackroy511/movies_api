@@ -32,7 +32,7 @@ class MoviesService:
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> list[MovieDTO]:
+    ) -> tuple[list[MovieDTO], int]:
         return await self.repo.get_list(
             page_number=page_number,
             page_size=page_size,

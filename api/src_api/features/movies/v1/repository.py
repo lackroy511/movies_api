@@ -25,7 +25,7 @@ class BaseMoviesRepo(ABC):
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> list[MovieDTO]:
+    ) -> tuple[list[MovieDTO], int]:
         pass
 
 
@@ -59,7 +59,7 @@ class MoviesElasticRepo(BaseMoviesRepo):
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> list[MovieDTO]:
+    ) -> tuple[list[MovieDTO], int]:
         from_ = (page_number - 1) * page_size
 
         body: dict[str, Any] = {
@@ -98,7 +98,9 @@ class MoviesElasticRepo(BaseMoviesRepo):
             index=self.index_name,
             body=body,
         )
-        return [MovieDTO(**movie["_source"]) for movie in result.body["hits"]["hits"]]
+        return [
+            MovieDTO(**movie["_source"]) for movie in result.body["hits"]["hits"]
+        ], result.body["hits"]["total"]["value"]
 
 
 class MoviesRedisRepo(BaseMoviesRepo):
