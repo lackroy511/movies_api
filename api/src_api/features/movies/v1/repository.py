@@ -24,11 +24,20 @@ class BaseMoviesRepo(ABC):
         page_size: int,
         sort: str | None,
         genre: str | None,
+        search: str | None,
     ) -> list[MovieDTO]:
         pass
 
 
 class MoviesElasticRepo(BaseMoviesRepo):
+    SEARCH_FIELDS = [
+        "actors_names",
+        "writers_names",
+        "title",
+        "description",
+        "genres",
+    ]
+
     def __init__(self, index_name: str, client: AsyncElasticsearch) -> None:
         self.index_name = index_name
         self.client = client
@@ -49,6 +58,7 @@ class MoviesElasticRepo(BaseMoviesRepo):
         page_size: int,
         sort: str | None,
         genre: str | None,
+        search: str | None,
     ) -> list[MovieDTO]:
         from_ = (page_number - 1) * page_size
 
@@ -64,11 +74,25 @@ class MoviesElasticRepo(BaseMoviesRepo):
                     },
                 },
             ]
-        
-        if genre:
-            body["query"] = {
-                "term": {"genres": genre},
-            }
+
+        if genre or search:
+            body.setdefault("query", {"bool": {}})
+
+            if genre:
+                body["query"]["bool"]["filter"] = [
+                    {"term": {"genres": genre}},
+                ]
+
+            if search:
+                body["query"]["bool"]["must"] = [
+                    {
+                        "multi_match": {
+                            "query": search,
+                            "fuzziness": "auto",
+                            "fields": self.SEARCH_FIELDS,
+                        },
+                    },
+                ]
 
         result = await self.client.search(
             index=self.index_name,

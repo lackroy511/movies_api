@@ -16,12 +16,19 @@ SortByType = Literal["imdb_rating", "-imdb_rating"]
 @router.get("/movies")
 async def get_movies_list(
     movies_service: Annotated[MoviesService, Depends(get_movies_service)],
-    page_number: int = Query(1, ge=1, description="Номер страницы"),
-    page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
-    sort: SortByType | None = Query(None, description="Сортировка по полю"),  # noqa: B008
-    genre: str | None = Query(None, description="Фильтр по названию жанра"),
+    page_number: int = Query(1, ge=1, description="Movies page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Movies page size"),
+    sort: SortByType | None = Query(None, description="Sort by field"),  # noqa: B008
+    genre: str | None = Query(None, description="Filter by genre name"),
+    search: str | None = Query(None, description="Full text search"),
 ) -> list[MovieResponse]:
-    movies = await movies_service.get_list(page_number, page_size, sort, genre)
+    movies = await movies_service.get_list(
+        page_number,
+        page_size,
+        sort,
+        genre.strip() if genre else None,
+        search.strip() if search else None,
+    )
     return [MovieResponse(**asdict(movie)) for movie in movies]
 
 
@@ -36,5 +43,5 @@ async def get_movie_by_id(
     except MovieNotFoundError:
         raise HTTPException(
             status_code=404,
-            detail="Фильм не найден",
+            detail="Movie not found",
         ) from None

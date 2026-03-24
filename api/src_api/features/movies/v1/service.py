@@ -31,12 +31,14 @@ class MoviesService:
         page_size: int,
         sort: str | None,
         genre: str | None,
+        search: str | None,
     ) -> list[MovieDTO]:
         return await self.repo.get_list(
             page_number=page_number,
             page_size=page_size,
             sort=sort,
             genre=genre,
+            search=search,
         )
 
 
