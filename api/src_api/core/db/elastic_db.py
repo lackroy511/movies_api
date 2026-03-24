@@ -7,5 +7,5 @@ client = AsyncElasticsearch(
 )
 
 
-async def get_elastic_client() -> AsyncElasticsearch:
+def get_elastic_client() -> AsyncElasticsearch:
     return client

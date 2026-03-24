@@ -1,5 +1,7 @@
+import elasticsearch
+
 from abc import ABC, abstractmethod
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch
@@ -16,7 +18,13 @@ class BaseMoviesRepo(ABC):
         pass
 
     @abstractmethod
-    async def get_by_filter(self) -> list[MovieDTO]:
+    async def get_list(
+        self,
+        page_number: int,
+        page_size: int,
+        sort: str | None,
+        genre: str | None,
+    ) -> list[MovieDTO]:
         pass
 
 
@@ -26,22 +34,45 @@ class MoviesElasticRepo(BaseMoviesRepo):
         self.client = client
 
     async def get_by_id(self, id: UUID) -> MovieDTO | None:
-        result = await self.client.search(
-            index=self.index_name,
-            query={
-                "term": {
-                    "id": {"value": id},
+        try:
+            result = await self.client.get(
+                index=self.index_name,
+                id=str(id),
+            )
+            return MovieDTO(**result.body["_source"])
+        except elasticsearch.NotFoundError:
+            return None
+
+    async def get_list(
+        self,
+        page_number: int,
+        page_size: int,
+        sort: str | None,
+        genre: str | None,
+    ) -> list[MovieDTO]:
+        from_ = (page_number - 1) * page_size
+
+        body: dict[str, Any] = {
+            "from": from_,
+            "size": page_size,
+        }
+        if sort:
+            body["sort"] = [
+                {
+                    sort.lstrip("-"): {
+                        "order": "desc" if sort.startswith("-") else "asc",
+                    },
                 },
-            },
-        )
-        if result.body["hits"]["hits"]:
-            return MovieDTO(**result["hits"]["hits"][0]["_source"])
+            ]
+        
+        if genre:
+            body["query"] = {
+                "term": {"genres": genre},
+            }
 
-        return None
-
-    async def get_by_filter(self) -> list[MovieDTO]:
         result = await self.client.search(
             index=self.index_name,
+            body=body,
         )
         return [MovieDTO(**movie["_source"]) for movie in result.body["hits"]["hits"]]
 
@@ -50,7 +81,7 @@ class MoviesRedisRepo(BaseMoviesRepo):
     pass
 
 
-async def get_movies_elastic_repo(
+def get_movies_elastic_repo(
     client: Annotated[AsyncElasticsearch, Depends(get_elastic_client)],
 ) -> MoviesElasticRepo:
     return MoviesElasticRepo(
