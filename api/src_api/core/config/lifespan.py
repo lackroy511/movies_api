@@ -4,7 +4,8 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-from src_api.core.db.elastic_db import client
+from src_api.core.db.elastic_db import client as elastic_client
+from src_api.core.db.redis_db import client as redis_client
 
 log = logging.getLogger(__name__)
 
@@ -14,4 +15,5 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     try:
         yield
     finally:
-        await client.close()
+        await elastic_client.close()
+        await redis_client.close()

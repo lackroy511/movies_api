@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     elastic_genres_index_name: str = "genres"
     elastic_persons_index_name: str = "persons"
     
+    redis_base_url: str = "redis://movies_redis:6379"
+    redis_cache_ttl: int = 60 * 5
+    
     log_level: str = "INFO"
 
 

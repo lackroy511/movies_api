@@ -1,4 +1,3 @@
-from src_api.features.shared.schemas import PaginatedResponse
 from dataclasses import asdict
 from typing import Annotated, Literal
 from uuid import UUID
@@ -8,8 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.schemas import MovieResponse
 from src_api.features.movies.v1.service import MoviesService, get_movies_service
+from src_api.features.shared.schemas import PaginatedResponse
 
-router = APIRouter(prefix="/v1", tags=["V1 Фильмы"])
+router = APIRouter(prefix="/v1", tags=["V1 Movies"])
 
 SortByType = Literal["imdb_rating", "-imdb_rating"]
 
@@ -23,7 +23,7 @@ async def get_movies_list(
     genre: str | None = Query(None, description="Filter by genre name"),
     search: str | None = Query(None, description="Full text search"),
 ) -> PaginatedResponse:
-    movies, total = await movies_service.get_list(
+    movies = await movies_service.get_list(
         page_number,
         page_size,
         sort,
@@ -31,12 +31,12 @@ async def get_movies_list(
         search.strip() if search else None,
     )
     return PaginatedResponse(
-        total=total,
+        total=movies.total,
         page_number=page_number,
         page_size=page_size,
-        has_next=True if page_number * page_size < total else False,
-        has_prev=True if page_number > 1 and page_number <= total else False,
-        items=[MovieResponse(**asdict(movie)) for movie in movies],
+        has_next=True if page_number * page_size < movies.total else False,
+        has_prev=True if page_number > 1 and page_number <= movies.total else False,
+        items=[MovieResponse(**asdict(movie)) for movie in movies.items],
     ) 
 
 

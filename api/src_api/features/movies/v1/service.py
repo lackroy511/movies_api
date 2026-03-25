@@ -2,21 +2,26 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-
 from fastapi import Depends
 
-from src_api.features.movies.v1.dto import MovieDTO
+from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.repository import (
-    BaseMoviesRepo,
     MoviesElasticRepo,
+    MoviesRedisRepo,
     get_movies_elastic_repo,
+    get_movies_redis_repo,
 )
 
 
 class MoviesService:
-    def __init__(self, repo: BaseMoviesRepo) -> None:
+    def __init__(
+        self,
+        repo: MoviesElasticRepo,
+        cache_repo: MoviesRedisRepo,
+    ) -> None:
         self.repo = repo
+        self.cache_repo = cache_repo
 
     async def get_by_id(self, id: UUID) -> MovieDTO:
         movie = await self.repo.get_by_id(id)
@@ -32,7 +37,7 @@ class MoviesService:
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> tuple[list[MovieDTO], int]:
+    ) -> MoviesListDTO:        
         return await self.repo.get_list(
             page_number=page_number,
             page_size=page_size,
@@ -45,5 +50,6 @@ class MoviesService:
 @lru_cache()
 def get_movies_service(
     elastic_repo: Annotated[MoviesElasticRepo, Depends(get_movies_elastic_repo)],
+    redis_repo: Annotated[MoviesRedisRepo, Depends(get_movies_redis_repo)],
 ) -> MoviesService:
-    return MoviesService(elastic_repo)
+    return MoviesService(elastic_repo, redis_repo)

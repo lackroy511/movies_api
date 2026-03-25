@@ -3,6 +3,12 @@ from uuid import UUID
 
 
 @dataclass
+class MoviesListDTO:
+    total: int
+    items: list[MovieDTO]
+
+
+@dataclass
 class MovieDTO:
     id: UUID
     title: str

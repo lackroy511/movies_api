@@ -1,35 +1,18 @@
-import elasticsearch
-
-from abc import ABC, abstractmethod
 from typing import Annotated, Any
 from uuid import UUID
 
+import elasticsearch
+import redis
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 
 from src_api.core.config.settings import settings
 from src_api.core.db.elastic_db import get_elastic_client
-from src_api.features.movies.v1.dto import MovieDTO
+from src_api.core.db.redis_db import get_redis_client
+from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 
 
-class BaseMoviesRepo(ABC):
-    @abstractmethod
-    async def get_by_id(self, id: UUID) -> MovieDTO | None:
-        pass
-
-    @abstractmethod
-    async def get_list(
-        self,
-        page_number: int,
-        page_size: int,
-        sort: str | None,
-        genre: str | None,
-        search: str | None,
-    ) -> tuple[list[MovieDTO], int]:
-        pass
-
-
-class MoviesElasticRepo(BaseMoviesRepo):
+class MoviesElasticRepo:
     SEARCH_FIELDS = [
         "actors_names",
         "writers_names",
@@ -59,7 +42,7 @@ class MoviesElasticRepo(BaseMoviesRepo):
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> tuple[list[MovieDTO], int]:
+    ) -> MoviesListDTO:
         from_ = (page_number - 1) * page_size
 
         body: dict[str, Any] = {
@@ -98,13 +81,20 @@ class MoviesElasticRepo(BaseMoviesRepo):
             index=self.index_name,
             body=body,
         )
-        return [
-            MovieDTO(**movie["_source"]) for movie in result.body["hits"]["hits"]
-        ], result.body["hits"]["total"]["value"]
+        return MoviesListDTO(
+            total=result.body["hits"]["total"]["value"],
+            items=[
+                MovieDTO(**movie["_source"]) for movie in result.body["hits"]["hits"]
+            ],
+        )
 
 
-class MoviesRedisRepo(BaseMoviesRepo):
-    pass
+class MoviesRedisRepo:
+    def __init__(self, client: redis.asyncio.Redis) -> None:
+        self.client = client
+
+    def set_cache(self, key: str, value: dict) -> None:
+        pass
 
 
 def get_movies_elastic_repo(
@@ -114,3 +104,9 @@ def get_movies_elastic_repo(
         settings.elastic_movies_index_name,
         client,
     )
+
+
+def get_movies_redis_repo(
+    client: Annotated[redis.asyncio.Redis, Depends(get_redis_client)],
+) -> MoviesRedisRepo:
+    return MoviesRedisRepo(client)
