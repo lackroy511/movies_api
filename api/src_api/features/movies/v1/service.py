@@ -1,16 +1,17 @@
-from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, cast
 from uuid import UUID
 
 from fastapi import Depends
 
+from src_api.core.db.redis_db import (
+    RedisCacheClient,
+    get_redis_client,
+)
 from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.repository import (
     MoviesElasticRepo,
-    MoviesRedisRepo,
     get_movies_elastic_repo,
-    get_movies_redis_repo,
 )
 
 
@@ -18,16 +19,24 @@ class MoviesService:
     def __init__(
         self,
         repo: MoviesElasticRepo,
-        cache_repo: MoviesRedisRepo,
+        cache_client: RedisCacheClient,
     ) -> None:
         self.repo = repo
-        self.cache_repo = cache_repo
+        self.cache_client = cache_client
+        self.cache_prefix = "movies"
 
     async def get_by_id(self, id: UUID) -> MovieDTO:
+        cache_key = self.cache_client.build_cache_key(self.cache_prefix, id)
+
+        movie = await self.cache_client.get_cache(cache_key, MovieDTO)
+        if movie:
+            return movie
+
         movie = await self.repo.get_by_id(id)
         if not movie:
             raise MovieNotFoundError("Movie not found")
 
+        await self.cache_client.set_cache(cache_key, movie)
         return movie
 
     async def get_list(
@@ -37,19 +46,34 @@ class MoviesService:
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> MoviesListDTO:        
-        return await self.repo.get_list(
+    ) -> MoviesListDTO:
+        cache_key = self.cache_client.build_cache_key(
+            self.cache_prefix,
+            page_number,
+            page_size,
+            sort,
+            genre,
+            search,
+        )
+
+        movies = await self.cache_client.get_cache(cache_key, MoviesListDTO)
+        if movies:
+            movies.items = [MovieDTO(**cast(dict, movie)) for movie in movies.items]
+            return movies
+        
+        movies = await self.repo.get_list(
             page_number=page_number,
             page_size=page_size,
             sort=sort,
             genre=genre,
             search=search,
         )
+        await self.cache_client.set_cache(cache_key, movies)
+        return movies
 
 
-@lru_cache()
 def get_movies_service(
     elastic_repo: Annotated[MoviesElasticRepo, Depends(get_movies_elastic_repo)],
-    redis_repo: Annotated[MoviesRedisRepo, Depends(get_movies_redis_repo)],
+    redis_repo: Annotated[RedisCacheClient, Depends(get_redis_client)],
 ) -> MoviesService:
     return MoviesService(elastic_repo, redis_repo)

@@ -2,13 +2,11 @@ from typing import Annotated, Any
 from uuid import UUID
 
 import elasticsearch
-import redis
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 
 from src_api.core.config.settings import settings
 from src_api.core.db.elastic_db import get_elastic_client
-from src_api.core.db.redis_db import get_redis_client
 from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 
 
@@ -89,14 +87,6 @@ class MoviesElasticRepo:
         )
 
 
-class MoviesRedisRepo:
-    def __init__(self, client: redis.asyncio.Redis) -> None:
-        self.client = client
-
-    def set_cache(self, key: str, value: dict) -> None:
-        pass
-
-
 def get_movies_elastic_repo(
     client: Annotated[AsyncElasticsearch, Depends(get_elastic_client)],
 ) -> MoviesElasticRepo:
@@ -104,9 +94,3 @@ def get_movies_elastic_repo(
         settings.elastic_movies_index_name,
         client,
     )
-
-
-def get_movies_redis_repo(
-    client: Annotated[redis.asyncio.Redis, Depends(get_redis_client)],
-) -> MoviesRedisRepo:
-    return MoviesRedisRepo(client)
