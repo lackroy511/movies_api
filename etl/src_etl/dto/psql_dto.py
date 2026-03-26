@@ -4,7 +4,6 @@ from enum import Enum
 from typing import TypedDict, TypeVar
 from uuid import UUID
 
-
 PostgresDTO = TypeVar("PostgresDTO", bound="BasePostgresDTO")
 
 
@@ -37,3 +36,16 @@ class PersonRole(str, Enum):
     ACTOR = "actor"
     WRITER = "writer"
     DIRECTOR = "director"
+
+
+@dataclass(frozen=True)
+class GenreDTO(BasePostgresDTO):
+    id: UUID
+    name: str
+    description: str
+
+
+@dataclass(frozen=True)
+class PersonDTO(BasePostgresDTO):
+    id: UUID
+    full_name: str

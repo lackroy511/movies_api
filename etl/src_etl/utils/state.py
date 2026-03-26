@@ -1,6 +1,7 @@
 import abc
 import json
 import os
+from threading import Lock
 from typing import Any
 
 
@@ -17,20 +18,23 @@ class BaseStorage(abc.ABC):
 class JsonFileStorage(BaseStorage):
     def __init__(self, file_path: str) -> None:
         self.file_path = f"state/{file_path}"
+        self.lock = Lock()
 
     def save_state(self, state: dict[str, Any]) -> None:
-        with open(self.file_path, "w") as f:
-            json.dump(state, f)
+        with self.lock:
+            with open(self.file_path, "w") as f:
+                json.dump(state, f)
 
     def retrieve_state(self) -> dict[str, Any]:
-        if not os.path.exists(self.file_path):
-            return {}
+        with self.lock:
+            if not os.path.exists(self.file_path):
+                return {}
 
-        try:
-            with open(self.file_path, "r") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return {}
+            try:
+                with open(self.file_path, "r") as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                return {}
 
 
 class State:

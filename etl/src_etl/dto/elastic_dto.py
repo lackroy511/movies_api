@@ -32,3 +32,16 @@ class MovieDocDTO:
 class PersonDTO:
     id: str
     name: str
+
+
+@dataclass(frozen=True)
+class GenreDocDTO:
+    id: str
+    name: str
+    description: str
+    
+
+@dataclass(frozen=True)
+class PersonDocDTO:
+    id: str
+    full_name: str

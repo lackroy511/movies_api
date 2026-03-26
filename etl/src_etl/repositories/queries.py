@@ -86,3 +86,25 @@ LEFT JOIN genres_agg ga ON ga.film_work_id = fw.id
 ORDER BY fw.id
 LIMIT %s OFFSET %s;
 """
+
+
+UPDATED_GENRES = """
+SELECT
+    id,
+    name,
+    description
+FROM content.genre
+WHERE updated_at > %s
+ORDER BY id
+LIMIT %s OFFSET %s;
+"""
+
+UPDATED_PERSONS = """
+SELECT
+    id,
+    full_name
+FROM content.person
+WHERE updated_at > %s
+ORDER BY id
+LIMIT %s OFFSET %s;
+"""
