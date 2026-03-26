@@ -1,6 +1,7 @@
 import logging
 import time
 from datetime import datetime, timezone
+from threading import Event
 
 from src_etl.dto.psql_dto import PostgresDTO
 from src_etl.repositories.elastic_repo import ElasticRepo
@@ -29,12 +30,13 @@ class ETLService:
         self.psql_offset = 0
         self.is_first_iter = True
 
-    def run(self) -> None:
+    def run(self, stop_event: Event) -> None:
         log.info(
             "Запуск ETL процесса для индекса %r",
             self.data_transformer.index_name,
         )
-        while True:
+        
+        while not stop_event.is_set():
             if self.is_first_iter:
                 last_updated = self.state.get_state(self.state.state_key)
                 new_last_updated = (
@@ -47,7 +49,7 @@ class ETLService:
                 self.is_first_iter = True
                 self.psql_offset = 0
                 self.state.set_state(self.state.state_key, new_last_updated)
-                time.sleep(10)
+                self._wait_timeout(stop_event)
                 continue
 
             transformed_data = self.data_transformer.transform(to_load)
@@ -58,6 +60,11 @@ class ETLService:
                 len(to_load),
                 self.data_transformer.index_name,
             )
+        
+        log.info(
+            "Завершен ETL процесс для индекса %r",
+            self.data_transformer.index_name,
+        )
 
     def _get_data_to_load(self, last_updated: str) -> list[PostgresDTO]:
         return self.psql_repo.get_updated_rows(
@@ -65,3 +72,9 @@ class ETLService:
             self.batch_size,
             self.psql_offset,
         )
+
+    def _wait_timeout(self, stop_event: Event) -> None:
+        for _ in range(10):
+            if stop_event.is_set():
+                return
+            time.sleep(1)

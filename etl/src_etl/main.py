@@ -1,16 +1,17 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Event
 
 from src_etl.config.logger import configure_logging
 from src_etl.config.settings import settings
 from src_etl.db.elastic_db import ElasticConnection
-from src_etl.db.psql_db import PSQLConnection, pool as psql_pool
+from src_etl.db.psql_db import PSQLConnection
+from src_etl.db.psql_db import pool as psql_pool
 from src_etl.services.fabric import ETLServiceFabric
 from src_etl.utils.state import JsonFileStorage
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 thread_pool = ThreadPoolExecutor(max_workers=3)
-
+stop_event = Event()
 
 configure_logging()
 log = logging.getLogger(__name__)
@@ -29,14 +30,21 @@ def main() -> None:
     try:
         with thread_pool as executor:
             threads = [
-                executor.submit(etl.run)
+                executor.submit(etl.run, stop_event)
                 for etl in [movies_etl, genres_etl, persons_etl]
             ]
             for thread in as_completed(threads):
-                thread.result()
+                try:
+                    thread.result()
+                except Exception:
+                    stop_event.set()
+                    log.info("Закрываю потоки")
+                    executor.shutdown(wait=True)
+                    raise
 
     except Exception:
         log.exception("Ошибка ETL процесса, процесс завершен.")
+        stop_event.set()
     finally:
         psql_pool.close()
 
