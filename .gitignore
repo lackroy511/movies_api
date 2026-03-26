@@ -116,7 +116,7 @@ messages.json
 
 .code-workspace
 
-etl_state.json
+state/
 
 .devcontainer
 

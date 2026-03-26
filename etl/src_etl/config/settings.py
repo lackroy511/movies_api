@@ -26,8 +26,6 @@ class Settings(BaseSettings):
     elastic_movies_index_name: str = "movies"
     elastic_genres_index_name: str = "genres"
     elastic_persons_index_name: str = "persons"
-    
-    etl_state_file: str = "etl_state.json"
 
     log_level: str = "INFO"
     

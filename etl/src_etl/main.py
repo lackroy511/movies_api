@@ -8,7 +8,6 @@ from src_etl.db.elastic_db import ElasticConnection
 from src_etl.db.psql_db import PSQLConnection
 from src_etl.db.psql_db import pool as psql_pool
 from src_etl.services.fabric import ETLServiceFabric
-from src_etl.utils.state import JsonFileStorage
 
 thread_pool = ThreadPoolExecutor(max_workers=3)
 stop_event = Event()
@@ -22,11 +21,10 @@ def main() -> None:
 
     psql_conn = PSQLConnection()
     elastic_conn = ElasticConnection(settings.elastic_base_url)
-    storage = JsonFileStorage(settings.etl_state_file)
 
-    movies_etl = fabric.get_movies_etl_service(psql_conn, elastic_conn, storage)
-    genres_etl = fabric.get_genres_etl_service(psql_conn, elastic_conn, storage)
-    persons_etl = fabric.get_persons_etl_service(psql_conn, elastic_conn, storage)
+    movies_etl = fabric.get_movies_etl_service(psql_conn, elastic_conn)
+    genres_etl = fabric.get_genres_etl_service(psql_conn, elastic_conn)
+    persons_etl = fabric.get_persons_etl_service(psql_conn, elastic_conn)
     try:
         with thread_pool as executor:
             threads = [

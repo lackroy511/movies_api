@@ -21,12 +21,16 @@ from src_etl.utils.state import JsonFileStorage, State
 
 
 class ETLServiceFabric:
+    STATE_POSTFIX = "_state.json"
+    
     def get_movies_etl_service(
         self,
         psql_conn: PSQLConnection,
         elastic_conn: ElasticConnection,
-        storage: JsonFileStorage,
     ) -> ETLService:
+        storage = JsonFileStorage(
+            file_name=settings.elastic_movies_index_name + self.STATE_POSTFIX,
+        )
         psql_repo = MoviesPSQLRepo(psql_conn)
         elastic_repo = MoviesElasticRepo(elastic_conn)
         data_tr = MoviesToElasticDataTransformer(settings.elastic_movies_index_name)
@@ -43,8 +47,10 @@ class ETLServiceFabric:
         self,
         psql_conn: PSQLConnection,
         elastic_conn: ElasticConnection,
-        storage: JsonFileStorage,
     ) -> ETLService:
+        storage = JsonFileStorage(
+            file_name=settings.elastic_genres_index_name + self.STATE_POSTFIX,
+        )
         psql_repo = GenresPSQLRepo(psql_conn)
         elastic_repo = GenresElasticRepo(elastic_conn)
         data_tr = GenresToElasticDataTransformer(settings.elastic_genres_index_name)
@@ -61,8 +67,10 @@ class ETLServiceFabric:
         self,
         psql_conn: PSQLConnection,
         elastic_conn: ElasticConnection,
-        storage: JsonFileStorage,
     ) -> ETLService:
+        storage = JsonFileStorage(
+            file_name=settings.elastic_persons_index_name + self.STATE_POSTFIX,
+        )
         psql_repo = PersonsPSQLRepo(psql_conn)
         elastic_repo = PersonsElasticRepo(elastic_conn)
         data_tr = PersonsToElasticDataTransformer(settings.elastic_persons_index_name)
