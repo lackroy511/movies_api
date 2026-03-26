@@ -1,18 +1,20 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
-from typing import TypedDict
+from typing import TypedDict, TypeVar
 from uuid import UUID
 
 
-class PersonRole(str, Enum):
-    ACTOR = "actor"
-    WRITER = "writer"
-    DIRECTOR = "director"
+PostgresDTO = TypeVar("PostgresDTO", bound="BasePostgresDTO")
 
 
 @dataclass(frozen=True)
-class MovieDTO:
+class BasePostgresDTO:
+    pass
+
+
+@dataclass(frozen=True)
+class MovieDTO(BasePostgresDTO):
     id: UUID
     title: str
     description: str | None
@@ -29,3 +31,9 @@ class Person(TypedDict):
     id: UUID
     role: PersonRole
     full_name: str
+
+
+class PersonRole(str, Enum):
+    ACTOR = "actor"
+    WRITER = "writer"
+    DIRECTOR = "director"

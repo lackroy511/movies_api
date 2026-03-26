@@ -34,8 +34,9 @@ class JsonFileStorage(BaseStorage):
 
 
 class State:
-    def __init__(self, storage: BaseStorage) -> None:
+    def __init__(self, storage: BaseStorage, state_key: str) -> None:
         self.storage = storage
+        self.state_key = state_key
         self.state = self.storage.retrieve_state()
 
     def set_state(self, key: str, value: str) -> None:

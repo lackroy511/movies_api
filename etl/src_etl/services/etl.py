@@ -12,15 +12,13 @@ log = logging.getLogger(__name__)
 
 
 class ETLService:
-    STATE_KEY = "last_updated"
-
     def __init__(
         self,
         state: State,
         psql_repo: PSQLRepository,
         elastic_repo: ElasticRepository,
         data_transformer: ToElasticDataTransformer,
-        batch_size: int = 100,
+        batch_size: int,
     ) -> None:
         self.state = state
         self.psql_repo = psql_repo
@@ -34,7 +32,7 @@ class ETLService:
     def run(self) -> None:
         while True:
             if self.is_first_iter:
-                last_updated = self.state.get_state(self.STATE_KEY)
+                last_updated = self.state.get_state(self.state.state_key)
                 new_last_updated = (
                     datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f") + "+00"
                 )
@@ -44,7 +42,7 @@ class ETLService:
             if not to_load:
                 self.is_first_iter = True
                 self.psql_offset = 0
-                self.state.set_state(self.STATE_KEY, new_last_updated)
+                self.state.set_state(self.state.state_key, new_last_updated)
                 time.sleep(10)
                 continue
 
@@ -52,7 +50,10 @@ class ETLService:
             self.elastic_repo.load_movies(transformed_data)
             self.psql_offset += self.batch_size
             log.info("Обновлено %r фильмов в Elasticsearch", len(to_load))
-            
+
     def _get_movies_to_load(self, last_updated: str) -> list[MovieDTO]:
-        query_params = (last_updated, self.batch_size, self.psql_offset)
-        return self.psql_repo.get_updated_movies(*query_params)
+        return self.psql_repo.get_updated_rows(
+            last_updated,
+            self.batch_size,
+            self.psql_offset,
+        )

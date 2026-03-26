@@ -2,17 +2,24 @@ import json
 from dataclasses import asdict
 
 from src_etl.dto.elastic_dto import DocMetaDataDTO, MetaDataDTO, MovieDocDTO, PersonDTO
-from src_etl.dto.psql_dto import MovieDTO, PersonRole
+from src_etl.dto.psql_dto import MovieDTO, PersonRole, PostgresDTO
+
+from abc import abstractmethod, ABC
 
 
-class ToElasticDataTransformer:
+class ToElasticDataTransformer(ABC):
+    @abstractmethod
+    def transform(self, items: list[PostgresDTO]) -> str:
+        ...
+
+
+class MoviesToElasticDataTransformer(ToElasticDataTransformer):
     def __init__(self, index_name: str) -> None:
         self.index_name = index_name
 
-    def transform(self, movies: list[MovieDTO]) -> str:
+    def transform(self, items: list[MovieDTO]) -> str:
         elastic_data = ""
-
-        for movie in movies:
+        for movie in items:
             doc_meta_data = DocMetaDataDTO(
                 index=MetaDataDTO(
                     _index=self.index_name,

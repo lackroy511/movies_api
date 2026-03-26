@@ -140,17 +140,11 @@ services:
     image: curlimages/curl:8.17.0
     container_name: elastic_init
     volumes:
-      - ./es-movies-index.json:/index.json
-    entrypoint: >
-      sh -c "
-      if curl -s -o /dev/null -w '%{http_code}' http://movies_elastic:9200/movies | grep -q 404;
-      then
-        echo 'Creating index';
-        curl -sS -X PUT 'http://movies_elastic:9200/movies' -H 'Content-Type: application/json' --data-binary @/index.json;
-      else
-        echo 'Index already exists';
-      fi
-      "
+      - ./elastic_init.sh:/entrypoint.sh
+      - ./es-movies-index.json:/movies-index.json
+      - ./es-genres-index.json:/genres-index.json
+      - ./es-persons-index.json:/persons-index.json
+    entrypoint: ["sh", "/entrypoint.sh"]
     depends_on:
       movies_elastic:
         condition: service_healthy
