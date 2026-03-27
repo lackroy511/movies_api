@@ -1,0 +1,2 @@
+class PersonNotFoundError(Exception):
+    pass
