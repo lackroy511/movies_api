@@ -1,5 +1,6 @@
+from src_api.features.shared.types import SortMoviesType
 from dataclasses import asdict
-from typing import Annotated, Literal
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,15 +12,13 @@ from src_api.features.shared.schemas import PaginatedResponse
 
 router = APIRouter(prefix="/v1", tags=["V1 Movies"])
 
-SortByType = Literal["imdb_rating", "-imdb_rating"]
-
 
 @router.get("/movies")
 async def get_movies_list(
     movies_service: Annotated[MoviesService, Depends(get_movies_service)],
     page_number: int = Query(1, ge=1, description="Movies page number"),
     page_size: int = Query(20, ge=1, le=100, description="Movies page size"),
-    sort: SortByType | None = Query(None, description="Sort by field"),  # noqa: B008
+    sort: SortMoviesType | None = Query(None, description="Sort by field"),  # noqa: B008
     genre: str | None = Query(None, description="Filter by genre name"),
     search: str | None = Query(None, description="Full text search"),
 ) -> PaginatedResponse[MovieResponse]:

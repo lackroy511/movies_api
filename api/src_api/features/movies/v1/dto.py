@@ -8,7 +8,7 @@ class MoviesListDTO:
     items: list[MovieDTO]
 
 
-@dataclass
+@dataclass(frozen=False)
 class MovieDTO:
     id: UUID
     title: str
@@ -18,12 +18,12 @@ class MovieDTO:
     directors_names: list[str]
     actors_names: list[str]
     writers_names: list[str]
-    directors: list[Person]
-    actors: list[Person]
-    writers: list[Person]
+    directors: list[MoviePerson]
+    actors: list[MoviePerson]
+    writers: list[MoviePerson]
 
 
-@dataclass
-class Person:
+@dataclass(frozen=True)
+class MoviePerson:
     id: UUID
     name: str

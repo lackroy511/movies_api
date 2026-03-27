@@ -7,7 +7,12 @@ from src_api.core.db.redis_db import (
     RedisCacheClient,
     get_redis_client,
 )
-from src_api.features.persons.v1.dto import PersonDTO, PersonsListDTO
+from src_api.features.persons.v1.dto import (
+    PersonDTO,
+    PersonsListDTO,
+    PersonMoviesListDTO,
+    PersonMovieDTO,
+)
 from src_api.features.persons.v1.exceptions import PersonNotFoundError
 from src_api.features.persons.v1.repository import (
     PersonsElasticRepo,
@@ -66,6 +71,43 @@ class PersonsService:
         )
         await self.cache_client.set_cache(cache_key, persons)
         return persons
+
+    async def get_movies_by_person_id(
+        self,
+        person_id: UUID,
+        page_number: int,
+        page_size: int,
+        sort: str | None,
+    ) -> PersonMoviesListDTO:
+        cache_key = self.cache_client.build_cache_key(
+            self.cache_prefix,
+            person_id,
+            page_number,
+            page_size,
+            sort,
+        )
+        person_movies = await self.cache_client.get_cache(
+            cache_key,
+            PersonMoviesListDTO,
+        )
+        if person_movies:
+            person_movies.items = [
+                PersonMovieDTO(**cast(dict, person_movie))
+                for person_movie in person_movies.items
+            ]
+            return person_movies
+
+        person = await self.repo.get_by_id(person_id)
+        if not person:
+            raise PersonNotFoundError("Person not found")
+        person_movies = await self.repo.get_movies_by_person_id(
+            person_id=person_id,
+            page_number=page_number,
+            page_size=page_size,
+            sort=sort,
+        )
+        await self.cache_client.set_cache(cache_key, person_movies)
+        return person_movies
 
 
 def get_persons_service(

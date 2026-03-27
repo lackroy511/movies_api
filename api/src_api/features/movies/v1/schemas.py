@@ -12,11 +12,11 @@ class MovieResponse(BaseModel):
     directors_names: list[str] = Field(description="Directors names")
     actors_names: list[str] = Field(description="Actors names")
     writers_names: list[str] = Field(description="Writers names")
-    directors: list[Person] = Field(description="Directors")
-    actors: list[Person] = Field(description="Actors")
-    writers: list[Person] = Field(description="Writers")
+    directors: list[MoviePerson] = Field(description="Directors")
+    actors: list[MoviePerson] = Field(description="Actors")
+    writers: list[MoviePerson] = Field(description="Writers")
 
 
-class Person(BaseModel):
+class MoviePerson(BaseModel):
     id: UUID
     name: str

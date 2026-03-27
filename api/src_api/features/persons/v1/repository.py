@@ -7,14 +7,25 @@ from fastapi import Depends
 
 from src_api.core.config.settings import settings
 from src_api.core.db.elastic_db import get_elastic_client
-from src_api.features.persons.v1.dto import PersonDTO, PersonsListDTO
+from src_api.features.persons.v1.dto import (
+    PersonDTO,
+    PersonsListDTO,
+    PersonMoviesListDTO,
+    PersonMovieDTO,
+)
 
 
 class PersonsElasticRepo:
     SEARCH_FIELDS = ["full_name"]
 
-    def __init__(self, index_name: str, client: AsyncElasticsearch) -> None:
+    def __init__(
+        self,
+        index_name: str,
+        movies_index_name: str,
+        client: AsyncElasticsearch,
+    ) -> None:
         self.index_name = index_name
+        self.movies_index_name = movies_index_name
         self.client = client
 
     async def get_by_id(self, id: UUID) -> PersonDTO | None:
@@ -63,41 +74,64 @@ class PersonsElasticRepo:
             ],
         )
 
+    async def get_movies_by_person_id(
+        self,
+        person_id: UUID,
+        page_number: int,
+        page_size: int,
+        sort: str | None,
+    ) -> PersonMoviesListDTO:
+        from_ = (page_number - 1) * page_size
 
-# Запрос на поиск фильмов по персоне
-# {
-#   "query": {
-#     "bool": {
-#       "should": [
-#         {
-#           "nested": {
-#             "path": "directors",
-#             "query": {
-#               "term": { "directors.id": "PERSON_ID" }
-#             }
-#           }
-#         },
-#         {
-#           "nested": {
-#             "path": "actors",
-#             "query": {
-#               "term": { "actors.id": "PERSON_ID" }
-#             }
-#           }
-#         },
-#         {
-#           "nested": {
-#             "path": "writers",
-#             "query": {
-#               "term": { "writers.id": "PERSON_ID" }
-#             }
-#           }
-#         }
-#       ],
-#       "minimum_should_match": 1
-#     }
-#   }
-# }
+        body: dict[str, Any] = {
+            "from": from_,
+            "size": page_size,
+        }
+        if sort:
+            body["sort"] = [
+                {
+                    sort.lstrip("-"): {
+                        "order": "desc" if sort.startswith("-") else "asc",
+                    },
+                },
+            ]
+        body["query"] = {
+            "bool": {
+                "should": [
+                    {
+                        "nested": {
+                            "path": "directors",
+                            "query": {"term": {"directors.id": person_id}},
+                        },
+                    },
+                    {
+                        "nested": {
+                            "path": "actors",
+                            "query": {"term": {"actors.id": person_id}},
+                        },
+                    },
+                    {
+                        "nested": {
+                            "path": "writers",
+                            "query": {"term": {"writers.id": person_id}},
+                        },
+                    },
+                ],
+                "minimum_should_match": 1,
+            },
+        }
+
+        result = await self.client.search(
+            index=self.movies_index_name,
+            body=body,
+        )
+        return PersonMoviesListDTO(
+            total=result.body["hits"]["total"]["value"],
+            items=[
+                PersonMovieDTO(**movie["_source"])
+                for movie in result.body["hits"]["hits"]
+            ],
+        )
 
 
 def get_persons_elastic_repo(
@@ -105,5 +139,6 @@ def get_persons_elastic_repo(
 ) -> PersonsElasticRepo:
     return PersonsElasticRepo(
         settings.elastic_persons_index_name,
+        settings.elastic_movies_index_name,
         client,
     )
