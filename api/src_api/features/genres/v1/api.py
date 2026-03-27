@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from src_api.features.genres.v1.exceptions import GenreNotFoundError
+from src_api.features.genres.v1.exceptions import ErrorMessages, GenreNotFoundError
 from src_api.features.genres.v1.schemas import GenreResponse
 from src_api.features.genres.v1.service import GenresService, get_genres_service
 from src_api.features.shared.schemas import PaginatedResponse
@@ -34,7 +34,19 @@ async def get_genres_list(
     )
 
 
-@router.get("/genres/{genre_id:uuid}")
+@router.get(
+    "/genres/{genre_id:uuid}",
+    responses={
+        404: {
+            "description": ErrorMessages.GENRE_NOT_FOUND,
+            "content": {
+                "application/json": {
+                    "example": {"detail": ErrorMessages.GENRE_NOT_FOUND},
+                },
+            },
+        },
+    },
+)
 async def get_genre_by_id(
     genre_id: UUID,
     genres_service: Annotated[GenresService, Depends(get_genres_service)],

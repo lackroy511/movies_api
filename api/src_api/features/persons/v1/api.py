@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src_api.features.persons.v1.dto import PersonDetailDTO
-from src_api.features.persons.v1.exceptions import PersonNotFoundError
+from src_api.features.persons.v1.exceptions import ErrorMessages, PersonNotFoundError
 from src_api.features.persons.v1.schemas import PersonMovieResponse, PersonResponse
 from src_api.features.persons.v1.service import PersonsService, get_persons_service
 from src_api.features.shared.schemas import PaginatedResponse
@@ -36,7 +36,19 @@ async def get_persons_list(
     )
 
 
-@router.get("/persons/{person_id:uuid}")
+@router.get(
+    "/persons/{person_id:uuid}",
+    responses={
+        404: {
+            "description": ErrorMessages.PERSON_NOT_FOUND,
+            "content": {
+                "application/json": {
+                    "example": {"detail": ErrorMessages.PERSON_NOT_FOUND},
+                },
+            },
+        },
+    },
+)
 async def get_person_by_id(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
     person_id: UUID,
@@ -51,7 +63,19 @@ async def get_person_by_id(
         ) from None
 
 
-@router.get("/persons/{person_id:uuid}/movies")
+@router.get(
+    "/persons/{person_id:uuid}/movies",
+    responses={
+        404: {
+            "description": ErrorMessages.PERSON_NOT_FOUND,
+            "content": {
+                "application/json": {
+                    "example": {"detail": ErrorMessages.PERSON_NOT_FOUND},
+                },
+            },
+        },
+    },
+)
 async def get_person_movies(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
     person_id: UUID,
@@ -84,5 +108,5 @@ async def get_person_movies(
     except PersonNotFoundError:
         raise HTTPException(
             status_code=404,
-            detail="Person not found",
+            detail=ErrorMessages.PERSON_NOT_FOUND,
         ) from None

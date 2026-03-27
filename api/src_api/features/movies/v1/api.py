@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from src_api.features.movies.v1.exceptions import MovieNotFoundError
+from src_api.features.movies.v1.exceptions import ErrorMessages, MovieNotFoundError
 from src_api.features.movies.v1.schemas import MovieResponse
 from src_api.features.movies.v1.service import MoviesService, get_movies_service
 from src_api.features.shared.schemas import PaginatedResponse
@@ -39,7 +39,19 @@ async def get_movies_list(
     )
 
 
-@router.get("/movies/{movie_id:uuid}")
+@router.get(
+    "/movies/{movie_id:uuid}",
+    responses={
+        404: {
+            "description": ErrorMessages.MOVIE_NOT_FOUND,
+            "content": {
+                "application/json": {
+                    "example": {"detail": ErrorMessages.MOVIE_NOT_FOUND},
+                },
+            },
+        },
+    },
+)
 async def get_movie_by_id(
     movie_id: UUID,
     movies_service: Annotated[MoviesService, Depends(get_movies_service)],
