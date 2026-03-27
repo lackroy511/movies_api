@@ -45,7 +45,7 @@ async def get_movie_by_id(
     movies_service: Annotated[MoviesService, Depends(get_movies_service)],
 ) -> MovieResponse:
     try:
-        movie = await movies_service.get_by_id(movie_id)
+        movie = await movies_service.get_by_id(str(movie_id))
         return MovieResponse(**asdict(movie))
     except MovieNotFoundError:
         raise HTTPException(

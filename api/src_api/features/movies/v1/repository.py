@@ -23,7 +23,7 @@ class MoviesElasticRepo:
         self.index_name = index_name
         self.client = client
 
-    async def get_by_id(self, id: UUID) -> MovieDTO | None:
+    async def get_by_id(self, id: str) -> MovieDTO | None:
         try:
             result = await self.client.get(
                 index=self.index_name,

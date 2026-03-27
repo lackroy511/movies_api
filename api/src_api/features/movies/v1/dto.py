@@ -10,7 +10,7 @@ class MoviesListDTO:
 
 @dataclass(frozen=False)
 class MovieDTO:
-    id: UUID
+    id: str
     title: str
     description: str | None
     imdb_rating: float | None
@@ -25,5 +25,5 @@ class MovieDTO:
 
 @dataclass(frozen=True)
 class MoviePerson:
-    id: UUID
+    id: str
     name: str

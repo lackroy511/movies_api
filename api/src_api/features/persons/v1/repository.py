@@ -1,4 +1,3 @@
-from uuid import UUID
 from typing import Annotated, Any
 
 import elasticsearch
@@ -28,7 +27,7 @@ class PersonsElasticRepo:
         self.movies_index_name = movies_index_name
         self.client = client
 
-    async def get_by_id(self, id: UUID) -> PersonDTO | None:
+    async def get_by_id(self, id: str) -> PersonDTO | None:
         try:
             result = await self.client.get(
                 index=self.index_name,
@@ -76,7 +75,8 @@ class PersonsElasticRepo:
 
     async def get_movies_by_person_id(
         self,
-        person_id: UUID,
+        person_id: str,
+        person_full_name: str,
         page_number: int,
         page_size: int,
         sort: str | None,
@@ -128,7 +128,23 @@ class PersonsElasticRepo:
         return PersonMoviesListDTO(
             total=result.body["hits"]["total"]["value"],
             items=[
-                PersonMovieDTO(**movie["_source"])
+                PersonMovieDTO(
+                    person_id=str(person_id),
+                    person_full_name=person_full_name,
+                    movie_id=movie["_source"]["id"],
+                    movie_title=movie["_source"]["title"],
+                    description=movie["_source"]["description"],
+                    imdb_rating=movie["_source"]["imdb_rating"],
+                    roles=[
+                        role
+                        for role, field in [
+                            ("actor", "actors_names"),
+                            ("director", "directors_names"),
+                            ("writer", "writers_names"),
+                        ]
+                        if person_full_name in movie["_source"][field]
+                    ],
+                )
                 for movie in result.body["hits"]["hits"]
             ],
         )

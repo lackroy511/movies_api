@@ -25,7 +25,7 @@ class GenresService:
         self.cache_client = cache_client
         self.cache_prefix = "genres"
 
-    async def get_by_id(self, id: UUID) -> Genre:
+    async def get_by_id(self, id: str) -> Genre:
         cache_key = self.cache_client.build_cache_key(self.cache_prefix, id)
 
         genre = await self.cache_client.get_cache(cache_key, Genre)

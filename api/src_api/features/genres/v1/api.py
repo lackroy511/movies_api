@@ -40,7 +40,7 @@ async def get_genre_by_id(
     genres_service: Annotated[GenresService, Depends(get_genres_service)],
 ) -> GenreResponse:
     try:
-        genre = await genres_service.get_by_id(genre_id)
+        genre = await genres_service.get_by_id(str(genre_id))
         return GenreResponse(**asdict(genre))
     except GenreNotFoundError:
         raise HTTPException(

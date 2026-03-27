@@ -25,7 +25,7 @@ class MoviesService:
         self.cache_client = cache_client
         self.cache_prefix = "movies"
 
-    async def get_by_id(self, id: UUID) -> MovieDTO:
+    async def get_by_id(self, id: str) -> MovieDTO:
         cache_key = self.cache_client.build_cache_key(self.cache_prefix, id)
 
         movie = await self.cache_client.get_cache(cache_key, MovieDTO)

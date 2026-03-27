@@ -20,7 +20,7 @@ class GenresElasticRepo:
         self.index_name = index_name
         self.client = client
 
-    async def get_by_id(self, id: UUID) -> Genre | None:
+    async def get_by_id(self, id: str) -> Genre | None:
         try:
             result = await self.client.get(
                 index=self.index_name,

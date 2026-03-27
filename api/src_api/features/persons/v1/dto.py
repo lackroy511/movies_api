@@ -1,4 +1,3 @@
-from uuid import UUID
 from dataclasses import dataclass
 
 
@@ -22,20 +21,16 @@ class PersonMoviesListDTO:
 
 @dataclass(frozen=True)
 class PersonMovieDTO:
-    id: UUID
-    title: str
+    person_id: str
+    person_full_name: str
+    movie_id: str
+    movie_title: str
     description: str | None
     imdb_rating: float | None
-    genres: list[str]
-    directors_names: list[str]
-    actors_names: list[str]
-    writers_names: list[str]
-    directors: list[MoviePerson]
-    actors: list[MoviePerson]
-    writers: list[MoviePerson]
-
+    roles: list[str]
+    
 
 @dataclass(frozen=True)
 class MoviePerson:
-    id: UUID
+    id: str
     name: str

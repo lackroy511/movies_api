@@ -35,13 +35,13 @@ async def get_persons_list(
     )
 
 
-@router.get("/persons/{person_id}")
+@router.get("/persons/{person_id:uuid}")
 async def get_person_by_id(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
     person_id: UUID,
 ) -> PersonResponse:
     try:
-        person = await persons_service.get_by_id(person_id)
+        person = await persons_service.get_by_id(str(person_id))
         return PersonResponse(**asdict(person))
     except PersonNotFoundError:
         raise HTTPException(
@@ -60,7 +60,7 @@ async def get_person_movies(
 ) -> PaginatedResponse[PersonMovieResponse]:
     try:
         person_movies = await persons_service.get_movies_by_person_id(
-            person_id=person_id,
+            person_id=str(person_id),
             page_number=page_number,
             page_size=page_size,
             sort=sort,
@@ -77,9 +77,10 @@ async def get_person_movies(
             ),
             items=[
                 PersonMovieResponse(
-                    id=person_movie.id,
-                    title=person_movie.title,
+                    id=person_movie.movie_id,
+                    title=person_movie.movie_title,
                     imdb_rating=person_movie.imdb_rating,
+                    roles=person_movie.roles,
                 )
                 for person_movie in person_movies.items
             ],

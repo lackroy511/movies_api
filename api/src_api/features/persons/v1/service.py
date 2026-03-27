@@ -1,4 +1,3 @@
-from uuid import UUID
 from typing import Annotated, cast
 
 from fastapi import Depends
@@ -30,7 +29,7 @@ class PersonsService:
         self.cache_client = cache_client
         self.cache_prefix = "persons"
 
-    async def get_by_id(self, id: UUID) -> PersonDTO:
+    async def get_by_id(self, id: str) -> PersonDTO:
         cache_key = self.cache_client.build_cache_key(self.cache_prefix, id)
 
         person = await self.cache_client.get_cache(cache_key, PersonDTO)
@@ -74,7 +73,7 @@ class PersonsService:
 
     async def get_movies_by_person_id(
         self,
-        person_id: UUID,
+        person_id: str,
         page_number: int,
         page_size: int,
         sort: str | None,
@@ -102,6 +101,7 @@ class PersonsService:
             raise PersonNotFoundError("Person not found")
         person_movies = await self.repo.get_movies_by_person_id(
             person_id=person_id,
+            person_full_name=person.full_name,
             page_number=page_number,
             page_size=page_size,
             sort=sort,

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class MovieResponse(BaseModel):
-    id: UUID
+    id: str
     title: str = Field(description="Movie title")
     description: str | None = Field(description="Movie description")
     imdb_rating: float | None = Field(description="IMDB rating")
@@ -18,5 +18,5 @@ class MovieResponse(BaseModel):
 
 
 class MoviePerson(BaseModel):
-    id: UUID
+    id: str
     name: str
