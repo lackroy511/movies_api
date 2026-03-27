@@ -1,3 +1,4 @@
+from src_api.features.persons.v1.dto import PersonDetailDTO
 from src_api.features.shared.types import SortMoviesType
 from uuid import UUID
 from dataclasses import asdict
@@ -39,10 +40,10 @@ async def get_persons_list(
 async def get_person_by_id(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
     person_id: UUID,
-) -> PersonResponse:
+) -> PersonDetailDTO:
     try:
         person = await persons_service.get_by_id(str(person_id))
-        return PersonResponse(**asdict(person))
+        return PersonDetailDTO(**asdict(person))
     except PersonNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -76,12 +77,7 @@ async def get_person_movies(
                 else False
             ),
             items=[
-                PersonMovieResponse(
-                    id=person_movie.movie_id,
-                    title=person_movie.movie_title,
-                    imdb_rating=person_movie.imdb_rating,
-                    roles=person_movie.roles,
-                )
+                PersonMovieResponse(**asdict(person_movie))
                 for person_movie in person_movies.items
             ],
         )

@@ -6,6 +6,10 @@ class PersonResponse(BaseModel):
     full_name: str
 
 
+class PersonDetailDTO(PersonResponse):
+    movies: list[PersonMovieResponse]
+
+
 class PersonMovieResponse(BaseModel):
     id: str
     title: str

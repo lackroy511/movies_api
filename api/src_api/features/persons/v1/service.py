@@ -10,7 +10,7 @@ from src_api.features.persons.v1.dto import (
     PersonDTO,
     PersonsListDTO,
     PersonMoviesListDTO,
-    PersonMovieDTO,
+    PersonMovieDTO, PersonDetailDTO,
 )
 from src_api.features.persons.v1.exceptions import PersonNotFoundError
 from src_api.features.persons.v1.repository import (
@@ -29,10 +29,10 @@ class PersonsService:
         self.cache_client = cache_client
         self.cache_prefix = "persons"
 
-    async def get_by_id(self, id: str) -> PersonDTO:
+    async def get_by_id(self, id: str) -> PersonDetailDTO:
         cache_key = self.cache_client.build_cache_key(self.cache_prefix, id)
 
-        person = await self.cache_client.get_cache(cache_key, PersonDTO)
+        person = await self.cache_client.get_cache(cache_key, PersonDetailDTO)
         if person:
             return person
 
@@ -101,7 +101,6 @@ class PersonsService:
             raise PersonNotFoundError("Person not found")
         person_movies = await self.repo.get_movies_by_person_id(
             person_id=person_id,
-            person_full_name=person.full_name,
             page_number=page_number,
             page_size=page_size,
             sort=sort,

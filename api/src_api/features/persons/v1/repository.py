@@ -11,6 +11,7 @@ from src_api.features.persons.v1.dto import (
     PersonsListDTO,
     PersonMoviesListDTO,
     PersonMovieDTO,
+    PersonDetailDTO,
 )
 
 
@@ -27,13 +28,18 @@ class PersonsElasticRepo:
         self.movies_index_name = movies_index_name
         self.client = client
 
-    async def get_by_id(self, id: str) -> PersonDTO | None:
+    async def get_by_id(self, id: str) -> PersonDetailDTO | None:
         try:
-            result = await self.client.get(
+            person = await self.client.get(
                 index=self.index_name,
                 id=str(id),
             )
-            return PersonDTO(**result.body["_source"])
+            movies = await self.get_movies_by_person_id(id, 1, 1000, None)
+            return PersonDetailDTO(
+                id=person.body["_source"]["id"],
+                full_name=person.body["_source"]["full_name"],
+                movies=movies.items,
+            )
         except elasticsearch.NotFoundError:
             return None
 
@@ -76,7 +82,6 @@ class PersonsElasticRepo:
     async def get_movies_by_person_id(
         self,
         person_id: str,
-        person_full_name: str,
         page_number: int,
         page_size: int,
         sort: str | None,
@@ -129,20 +134,20 @@ class PersonsElasticRepo:
             total=result.body["hits"]["total"]["value"],
             items=[
                 PersonMovieDTO(
-                    person_id=str(person_id),
-                    person_full_name=person_full_name,
-                    movie_id=movie["_source"]["id"],
-                    movie_title=movie["_source"]["title"],
-                    description=movie["_source"]["description"],
+                    id=movie["_source"]["id"],
+                    title=movie["_source"]["title"],
                     imdb_rating=movie["_source"]["imdb_rating"],
                     roles=[
-                        role
-                        for role, field in [
-                            ("actor", "actors_names"),
-                            ("director", "directors_names"),
-                            ("writer", "writers_names"),
+                        role_name
+                        for field_name, role_name in [
+                            ("actors", "actor"),
+                            ("directors", "director"),
+                            ("writers", "writer"),
                         ]
-                        if person_full_name in movie["_source"][field]
+                        if any(
+                            entry.get("id") == person_id
+                            for entry in movie["_source"].get(field_name, [])
+                        )
                     ],
                 )
                 for movie in result.body["hits"]["hits"]

@@ -13,6 +13,11 @@ class PersonDTO:
     full_name: str
 
 
+@dataclass(frozen=True)
+class PersonDetailDTO(PersonDTO):
+    movies: list[PersonMovieDTO]
+
+
 @dataclass
 class PersonMoviesListDTO:
     total: int
@@ -21,11 +26,8 @@ class PersonMoviesListDTO:
 
 @dataclass(frozen=True)
 class PersonMovieDTO:
-    person_id: str
-    person_full_name: str
-    movie_id: str
-    movie_title: str
-    description: str | None
+    id: str
+    title: str
     imdb_rating: float | None
     roles: list[str]
     
