@@ -1,0 +1,3 @@
+
+class GenreNotFoundError(Exception):
+    pass

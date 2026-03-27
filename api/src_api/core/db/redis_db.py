@@ -37,8 +37,8 @@ class RedisCacheClient:
         if not is_saved:
             raise SaveRedisCacheError("Failed to save movie to cache")
 
-    async def get_cache(self, key: str, result_dto: type[T]) -> T | None:
-        if not is_dataclass(result_dto):
+    async def get_cache(self, key: str, result_dto_class: type[T]) -> T | None:
+        if not is_dataclass(result_dto_class):
             raise ValueError(self.OBJ_NOT_DATACLASS_MSG)
         
         raw_data = await self.client.get(key)
@@ -47,7 +47,7 @@ class RedisCacheClient:
 
         json_str = raw_data.decode("utf-8")
         data = json.loads(json_str)
-        return result_dto(**data)
+        return result_dto_class(**data)
 
     async def delete_cache(self, key: str) -> int:
         return await self.client.delete(key)

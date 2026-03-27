@@ -22,7 +22,7 @@ async def get_movies_list(
     sort: SortByType | None = Query(None, description="Sort by field"),  # noqa: B008
     genre: str | None = Query(None, description="Filter by genre name"),
     search: str | None = Query(None, description="Full text search"),
-) -> PaginatedResponse:
+) -> PaginatedResponse[MovieResponse]:
     movies = await movies_service.get_list(
         page_number,
         page_size,
@@ -30,14 +30,14 @@ async def get_movies_list(
         genre.strip() if genre else None,
         search.strip() if search else None,
     )
-    return PaginatedResponse(
+    return PaginatedResponse[MovieResponse](
         total=movies.total,
         page_number=page_number,
         page_size=page_size,
         has_next=True if page_number * page_size < movies.total else False,
         has_prev=True if page_number > 1 and page_number <= movies.total else False,
         items=[MovieResponse(**asdict(movie)) for movie in movies.items],
-    ) 
+    )
 
 
 @router.get("/movies/{movie_id:uuid}")

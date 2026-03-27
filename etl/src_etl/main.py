@@ -42,7 +42,6 @@ def main() -> None:
 
     except Exception:
         log.exception("Ошибка ETL процесса, процесс завершен.")
-        stop_event.set()
     finally:
         psql_pool.close()
 
