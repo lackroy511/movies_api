@@ -7,11 +7,11 @@ from fastapi import Depends
 from src_api.core.config.settings import settings
 from src_api.core.db.elastic_db import get_elastic_client
 from src_api.features.persons.v1.dto import (
-    PersonDTO,
-    PersonsListDTO,
-    PersonMoviesListDTO,
-    PersonMovieDTO,
     PersonDetailDTO,
+    PersonDTO,
+    PersonMovieDTO,
+    PersonMoviesListDTO,
+    PersonsListDTO,
 )
 
 

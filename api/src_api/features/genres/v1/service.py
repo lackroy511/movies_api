@@ -1,5 +1,5 @@
-from uuid import UUID
 from typing import Annotated, cast
+from uuid import UUID
 
 from fastapi import Depends
 

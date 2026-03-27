@@ -1,5 +1,5 @@
-from uuid import UUID
 from typing import Annotated, Any
+from uuid import UUID
 
 import elasticsearch
 from elasticsearch import AsyncElasticsearch

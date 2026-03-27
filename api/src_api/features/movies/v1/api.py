@@ -1,4 +1,3 @@
-from src_api.features.shared.types import SortMoviesType
 from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
@@ -9,6 +8,7 @@ from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.schemas import MovieResponse
 from src_api.features.movies.v1.service import MoviesService, get_movies_service
 from src_api.features.shared.schemas import PaginatedResponse
+from src_api.features.shared.types import SortMoviesType
 
 router = APIRouter(prefix="/v1", tags=["V1 Movies"])
 

@@ -1,15 +1,15 @@
-from src_api.features.persons.v1.dto import PersonDetailDTO
-from src_api.features.shared.types import SortMoviesType
-from uuid import UUID
 from dataclasses import asdict
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from src_api.features.persons.v1.dto import PersonDetailDTO
 from src_api.features.persons.v1.exceptions import PersonNotFoundError
-from src_api.features.persons.v1.schemas import PersonResponse, PersonMovieResponse
+from src_api.features.persons.v1.schemas import PersonMovieResponse, PersonResponse
 from src_api.features.persons.v1.service import PersonsService, get_persons_service
 from src_api.features.shared.schemas import PaginatedResponse
+from src_api.features.shared.types import SortMoviesType
 
 router = APIRouter(prefix="/v1", tags=["V1 Persons"])
 

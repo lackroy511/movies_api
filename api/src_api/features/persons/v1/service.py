@@ -7,10 +7,11 @@ from src_api.core.db.redis_db import (
     get_redis_client,
 )
 from src_api.features.persons.v1.dto import (
+    PersonDetailDTO,
     PersonDTO,
-    PersonsListDTO,
+    PersonMovieDTO,
     PersonMoviesListDTO,
-    PersonMovieDTO, PersonDetailDTO,
+    PersonsListDTO,
 )
 from src_api.features.persons.v1.exceptions import PersonNotFoundError
 from src_api.features.persons.v1.repository import (
