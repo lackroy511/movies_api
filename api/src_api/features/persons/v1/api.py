@@ -1,12 +1,16 @@
+from src_api.features.shared.query_params import PaginationParams
 from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from src_api.features.persons.v1.dto import PersonDetailDTO
 from src_api.features.persons.v1.exceptions import ErrorMessages, PersonNotFoundError
-from src_api.features.persons.v1.schemas import PersonMovieResponse, PersonResponse
+from src_api.features.persons.v1.schemas import (
+    PersonMovieResponse,
+    PersonResponse,
+    PersonDetailResponse,
+)
 from src_api.features.persons.v1.service import PersonsService, get_persons_service
 from src_api.features.shared.schemas import PaginatedResponse
 from src_api.features.shared.types import SortMoviesType
@@ -17,21 +21,24 @@ router = APIRouter(prefix="/v1", tags=["V1 Persons"])
 @router.get("/persons")
 async def get_persons_list(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
-    page_number: int = Query(1, ge=1, description="Persons page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Persons page size"),
+    pagination: Annotated[PaginationParams, Depends(PaginationParams)],
     search: str | None = Query(None, description="Full text search"),
 ) -> PaginatedResponse[PersonResponse]:
     persons = await persons_service.get_list(
-        page_number,
-        page_size,
+        pagination.page_number,
+        pagination.page_size,
         search.strip() if search else None,
     )
     return PaginatedResponse[PersonResponse](
         total=persons.total,
-        page_number=page_number,
-        page_size=page_size,
-        has_next=True if page_number * page_size < persons.total else False,
-        has_prev=True if page_number > 1 and page_number <= persons.total else False,
+        page_number=pagination.page_number,
+        page_size=pagination.page_size,
+        has_next=True
+        if pagination.page_number * pagination.page_size < persons.total
+        else False,
+        has_prev=True
+        if pagination.page_number > 1 and pagination.page_number <= persons.total
+        else False,
         items=[PersonResponse(**asdict(person)) for person in persons.items],
     )
 
@@ -52,10 +59,10 @@ async def get_persons_list(
 async def get_person_by_id(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
     person_id: UUID,
-) -> PersonDetailDTO:
+) -> PersonDetailResponse:
     try:
         person = await persons_service.get_by_id(str(person_id))
-        return PersonDetailDTO(**asdict(person))
+        return PersonDetailResponse(**asdict(person))
     except PersonNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -79,25 +86,27 @@ async def get_person_by_id(
 async def get_person_movies(
     persons_service: Annotated[PersonsService, Depends(get_persons_service)],
     person_id: UUID,
-    page_number: int = Query(1, ge=1, description="Person movies page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Person movies page size"),
+    pagination: Annotated[PaginationParams, Depends(PaginationParams)],
     sort: SortMoviesType | None = Query(None, description="Sort by field"),  # noqa: B008
 ) -> PaginatedResponse[PersonMovieResponse]:
     try:
         person_movies = await persons_service.get_movies_by_person_id(
             person_id=str(person_id),
-            page_number=page_number,
-            page_size=page_size,
+            page_number=pagination.page_number,
+            page_size=pagination.page_size,
             sort=sort,
         )
         return PaginatedResponse(
             total=person_movies.total,
-            page_number=page_number,
-            page_size=page_size,
-            has_next=True if page_number * page_size < person_movies.total else False,
+            page_number=pagination.page_number,
+            page_size=pagination.page_size,
+            has_next=True
+            if pagination.page_number * pagination.page_size < person_movies.total
+            else False,
             has_prev=(
                 True
-                if page_number > 1 and page_number <= person_movies.total
+                if pagination.page_number > 1
+                and pagination.page_number <= person_movies.total
                 else False
             ),
             items=[

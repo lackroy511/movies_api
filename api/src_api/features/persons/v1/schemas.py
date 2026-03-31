@@ -6,7 +6,7 @@ class PersonResponse(BaseModel):
     full_name: str
 
 
-class PersonDetailDTO(PersonResponse):
+class PersonDetailResponse(PersonResponse):
     movies: list[PersonMovieResponse]
 
 

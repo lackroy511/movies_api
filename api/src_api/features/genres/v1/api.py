@@ -1,3 +1,4 @@
+from src_api.features.shared.query_params import PaginationParams
 from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
@@ -15,21 +16,24 @@ router = APIRouter(prefix="/v1", tags=["V1 Genres"])
 @router.get("/genres")
 async def get_genres_list(
     genres_service: Annotated[GenresService, Depends(get_genres_service)],
-    page_number: int = Query(1, ge=1, description="Genres page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Genres page size"),
+    pagination: Annotated[PaginationParams, Depends(PaginationParams)],
     search: str | None = Query(None, description="Full text search"),
 ) -> PaginatedResponse[GenreResponse]:
     genres = await genres_service.get_list(
-        page_number,
-        page_size,
+        pagination.page_number,
+        pagination.page_size,
         search.strip() if search else None,
     )
     return PaginatedResponse[GenreResponse](
         total=genres.total,
-        page_number=page_number,
-        page_size=page_size,
-        has_next=True if page_number * page_size < genres.total else False,
-        has_prev=True if page_number > 1 and page_number <= genres.total else False,
+        page_number=pagination.page_number,
+        page_size=pagination.page_size,
+        has_next=True
+        if pagination.page_number * pagination.page_size < genres.total
+        else False,
+        has_prev=True
+        if pagination.page_number > 1 and pagination.page_number <= genres.total
+        else False,
         items=[GenreResponse(**asdict(genre)) for genre in genres.items],
     )
 

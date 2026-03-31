@@ -25,7 +25,7 @@ class RedisCacheClient:
     
     def __init__(self, client: aioredis.Redis, ttl: int) -> None:
         self.client = client
-        self.ttl = settings.redis_cache_ttl
+        self.ttl = ttl
 
     async def set_cache(self, key: str, dto_obj: DataclassType) -> None:
         if not is_dataclass(dto_obj):
