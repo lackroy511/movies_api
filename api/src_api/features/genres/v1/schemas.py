@@ -1,8 +1,8 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class GenreResponse(BaseModel):
     id: str
-    name: str
-    description: str | None
+    name: str = Field(description="Genre name")
+    description: str | None = Field(description="Genre description")
