@@ -7,7 +7,7 @@ class PersonResponse(BaseModel):
 
 
 class PersonDetailResponse(PersonResponse):
-    movies: list[PersonMovieResponse]
+    pass
 
 
 class PersonMovieResponse(BaseModel):

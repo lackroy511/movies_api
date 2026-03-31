@@ -34,11 +34,9 @@ class PersonsElasticRepo:
                 index=self.index_name,
                 id=str(id),
             )
-            movies = await self.get_movies_by_person_id(id, 1, 1000, None)
             return PersonDetailDTO(
                 id=person.body["_source"]["id"],
                 full_name=person.body["_source"]["full_name"],
-                movies=movies.items,
             )
         except elasticsearch.NotFoundError:
             return None

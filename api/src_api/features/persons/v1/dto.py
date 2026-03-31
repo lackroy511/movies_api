@@ -15,7 +15,7 @@ class PersonDTO:
 
 @dataclass(frozen=True)
 class PersonDetailDTO(PersonDTO):
-    movies: list[PersonMovieDTO]
+    pass
 
 
 @dataclass
