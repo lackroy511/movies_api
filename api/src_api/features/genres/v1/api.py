@@ -24,16 +24,10 @@ async def get_genres_list(
         pagination.page_size,
         search.strip() if search else None,
     )
-    return PaginatedResponse[GenreResponse](
+    return PaginatedResponse.from_list(
         total=genres.total,
         page_number=pagination.page_number,
         page_size=pagination.page_size,
-        has_next=True
-        if pagination.page_number * pagination.page_size < genres.total
-        else False,
-        has_prev=True
-        if pagination.page_number > 1 and pagination.page_number <= genres.total
-        else False,
         items=[GenreResponse(**asdict(genre)) for genre in genres.items],
     )
 

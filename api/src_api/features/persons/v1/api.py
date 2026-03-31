@@ -29,16 +29,10 @@ async def get_persons_list(
         pagination.page_size,
         search.strip() if search else None,
     )
-    return PaginatedResponse[PersonResponse](
+    return PaginatedResponse.from_list(
         total=persons.total,
         page_number=pagination.page_number,
         page_size=pagination.page_size,
-        has_next=True
-        if pagination.page_number * pagination.page_size < persons.total
-        else False,
-        has_prev=True
-        if pagination.page_number > 1 and pagination.page_number <= persons.total
-        else False,
         items=[PersonResponse(**asdict(person)) for person in persons.items],
     )
 
@@ -96,19 +90,10 @@ async def get_person_movies(
             page_size=pagination.page_size,
             sort=sort,
         )
-        return PaginatedResponse(
+        return PaginatedResponse.from_list(
             total=person_movies.total,
             page_number=pagination.page_number,
             page_size=pagination.page_size,
-            has_next=True
-            if pagination.page_number * pagination.page_size < person_movies.total
-            else False,
-            has_prev=(
-                True
-                if pagination.page_number > 1
-                and pagination.page_number <= person_movies.total
-                else False
-            ),
             items=[
                 PersonMovieResponse(**asdict(person_movie))
                 for person_movie in person_movies.items

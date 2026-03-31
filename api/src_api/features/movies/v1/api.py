@@ -29,16 +29,10 @@ async def get_movies_list(
         genre.strip() if genre else None,
         search.strip() if search else None,
     )
-    return PaginatedResponse[MovieResponse](
+    return PaginatedResponse.from_list(
         total=movies.total,
         page_number=pagination.page_number,
         page_size=pagination.page_size,
-        has_next=True
-        if pagination.page_number * pagination.page_size < movies.total
-        else False,
-        has_prev=True
-        if pagination.page_number > 1 and pagination.page_number <= movies.total
-        else False,
         items=[MovieResponse(**asdict(movie)) for movie in movies.items],
     )
 
