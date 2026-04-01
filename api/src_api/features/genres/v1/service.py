@@ -2,23 +2,24 @@ from typing import Annotated, cast
 
 from fastapi import Depends
 
-from src_api.core.db.redis_db import (
+from src_api.core.db.cache import (
     RedisCacheClient,
     get_redis_client,
+    CacheClientInterface,
 )
 from src_api.features.genres.v1.dto import Genre, GenresListDTO
 from src_api.features.genres.v1.exceptions import GenreNotFoundError
 from src_api.features.genres.v1.repository import (
     GenresElasticRepo,
-    get_genres_elastic_repo,
+    get_genres_elastic_repo, GenresRepoInterface,
 )
 
 
 class GenresService:
     def __init__(
         self,
-        repo: GenresElasticRepo,
-        cache_client: RedisCacheClient,
+        repo: GenresRepoInterface,
+        cache_client: CacheClientInterface,
     ) -> None:
         self.repo = repo
         self.cache_client = cache_client

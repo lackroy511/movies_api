@@ -1,4 +1,6 @@
 from typing import Annotated, Any
+from abc import ABC, abstractmethod
+
 
 import elasticsearch
 from elasticsearch import AsyncElasticsearch
@@ -9,7 +11,24 @@ from src_api.core.db.elastic_db import get_elastic_client
 from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 
 
-class MoviesElasticRepo:
+class MoviesRepoInterface(ABC):
+    @abstractmethod
+    async def get_by_id(self, id: str) -> MovieDTO | None:
+        ...
+
+    @abstractmethod
+    async def get_list(
+        self,
+        page_number: int,
+        page_size: int,
+        sort: str | None,
+        genre: str | None,
+        search: str | None,
+    ) -> MoviesListDTO:
+        ...
+
+
+class MoviesElasticRepo(MoviesRepoInterface):
     SEARCH_FIELDS = [
         "actors_names",
         "writers_names",

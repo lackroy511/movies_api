@@ -1,6 +1,9 @@
+from src_api.core.db.exceptions import SaveRedisCacheError
+from src_api.features.shared.types import DataclassType
+from abc import ABC, abstractmethod
 import json
 from dataclasses import asdict, is_dataclass
-from typing import Any, Protocol, TypeVar
+from typing import Any, TypeVar
 
 import redis.asyncio as aioredis
 
@@ -12,15 +15,25 @@ client = aioredis.Redis(connection_pool=pool)
 T = TypeVar("T")
 
 
-class DataclassType(Protocol):
-    __dataclass_fields__: dict
+class CacheClientInterface(ABC):
+    @abstractmethod
+    async def set_cache(self, key: str, dto_obj: T) -> None:
+        ...
+
+    @abstractmethod
+    async def get_cache(self, key: str, result_dto_class: type[T]) -> T | None:
+        ...
+
+    @abstractmethod
+    async def delete_cache(self, key: str) -> int:
+        ...
+
+    @abstractmethod
+    def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
+        ...
 
 
-class SaveRedisCacheError(Exception):
-    pass
-
-
-class RedisCacheClient:
+class RedisCacheClient(CacheClientInterface):
     OBJ_NOT_DATACLASS_MSG = "Object must be a dataclass"
     
     def __init__(self, client: aioredis.Redis, ttl: int) -> None:

@@ -14,8 +14,35 @@ from src_api.features.persons.v1.dto import (
     PersonsListDTO,
 )
 
+from abc import ABC, abstractmethod
 
-class PersonsElasticRepo:
+
+class PersonsRepoInterface(ABC):
+    @abstractmethod
+    async def get_by_id(self, id: str) -> PersonDetailDTO | None:
+        ...
+
+    @abstractmethod
+    async def get_list(
+        self,
+        page_number: int,
+        page_size: int,
+        search: str | None,
+    ) -> PersonsListDTO:
+        ...
+
+    @abstractmethod
+    async def get_movies_by_person_id(
+        self,
+        person_id: str,
+        page_number: int,
+        page_size: int,
+        sort: str | None,
+    ) -> PersonMoviesListDTO:
+        ...
+
+
+class PersonsElasticRepo(PersonsRepoInterface):
     SEARCH_FIELDS = ["full_name"]
 
     def __init__(

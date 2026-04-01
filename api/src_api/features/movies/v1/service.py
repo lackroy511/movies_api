@@ -2,23 +2,25 @@ from typing import Annotated, cast
 
 from fastapi import Depends
 
-from src_api.core.db.redis_db import (
+from src_api.core.db.cache import (
     RedisCacheClient,
     get_redis_client,
+    CacheClientInterface,
 )
 from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.repository import (
     MoviesElasticRepo,
     get_movies_elastic_repo,
+    MoviesRepoInterface,
 )
 
 
 class MoviesService:
     def __init__(
         self,
-        repo: MoviesElasticRepo,
-        cache_client: RedisCacheClient,
+        repo: MoviesRepoInterface,
+        cache_client: CacheClientInterface,
     ) -> None:
         self.repo = repo
         self.cache_client = cache_client
@@ -59,7 +61,7 @@ class MoviesService:
         if movies:
             movies.items = [MovieDTO(**cast(dict, movie)) for movie in movies.items]
             return movies
-        
+
         movies = await self.repo.get_list(
             page_number=page_number,
             page_size=page_size,

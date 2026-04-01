@@ -2,9 +2,10 @@ from typing import Annotated, cast
 
 from fastapi import Depends
 
-from src_api.core.db.redis_db import (
+from src_api.core.db.cache import (
     RedisCacheClient,
     get_redis_client,
+    CacheClientInterface,
 )
 from src_api.features.persons.v1.dto import (
     PersonDetailDTO,
@@ -17,14 +18,15 @@ from src_api.features.persons.v1.exceptions import PersonNotFoundError
 from src_api.features.persons.v1.repository import (
     PersonsElasticRepo,
     get_persons_elastic_repo,
+    PersonsRepoInterface,
 )
 
 
 class PersonsService:
     def __init__(
         self,
-        repo: PersonsElasticRepo,
-        cache_client: RedisCacheClient,
+        repo: PersonsRepoInterface,
+        cache_client: CacheClientInterface,
     ) -> None:
         self.repo = repo
         self.cache_client = cache_client

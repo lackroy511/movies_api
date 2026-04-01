@@ -1,4 +1,5 @@
 from typing import Annotated, Any
+from abc import ABC, abstractmethod
 
 import elasticsearch
 from elasticsearch import AsyncElasticsearch
@@ -9,7 +10,22 @@ from src_api.core.db.elastic_db import get_elastic_client
 from src_api.features.genres.v1.dto import Genre, GenresListDTO
 
 
-class GenresElasticRepo:
+class GenresRepoInterface(ABC):
+    @abstractmethod
+    async def get_by_id(self, id: str) -> Genre | None:
+        pass
+
+    @abstractmethod
+    async def get_list(
+        self,
+        page_number: int,
+        page_size: int,
+        search: str | None,
+    ) -> GenresListDTO:
+        pass
+
+
+class GenresElasticRepo(GenresRepoInterface):
     SEARCH_FIELDS = [
         "name",
         "description",
