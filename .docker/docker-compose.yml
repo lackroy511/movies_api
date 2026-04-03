@@ -1,3 +1,11 @@
+x-common-defaults: &common_defaults
+  restart: unless-stopped
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "2"
+
 services:
   nginx:
     image: nginx:1.29.5
@@ -11,12 +19,7 @@ services:
       - movies_django
     ports:
       - 80:80
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
+    <<: *common_defaults
 
   movies_django:
     container_name: movies_django
@@ -31,17 +34,12 @@ services:
       - media_volume:/app/media
     env_file:
       - ../.env
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
     depends_on:
       movies_database:
         condition: service_healthy
       movies_elastic:
         condition: service_healthy
+    <<: *common_defaults
 
   movies_etl:
     container_name: movies_etl
@@ -53,12 +51,6 @@ services:
       - etl_logs:/app/logs
     env_file:
       - ../.env
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
     depends_on:
       movies_database:
         condition: service_healthy
@@ -66,7 +58,8 @@ services:
         condition: service_healthy
       movies_django:
         condition: service_started
-  
+    <<: *common_defaults
+
   movies_api:
     container_name: movies_api
     build:
@@ -75,18 +68,12 @@ services:
       sh -c "gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8010 src_api.main:app --no-control-socket"
     env_file:
       - ../.env
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
     depends_on:
       movies_elastic:
         condition: service_healthy
       movies_redis:
         condition: service_healthy
-      
+    <<: *common_defaults
 
   movies_database:
     image: postgres:17
@@ -101,12 +88,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
+    <<: *common_defaults
 
   movies_elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
@@ -118,12 +100,6 @@ services:
       - action.auto_create_index=false
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
     healthcheck:
       test:
         [
@@ -133,6 +109,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    <<: *common_defaults
 
   elastic_init:
     image: curlimages/curl:8.17.0
@@ -146,21 +123,17 @@ services:
     depends_on:
       movies_elastic:
         condition: service_healthy
+    <<: *common_defaults
 
   movies_redis:
     container_name: movies_redis
     image: redis:8
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "2"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    <<: *common_defaults
 
 volumes:
   movies_database:
