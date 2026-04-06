@@ -13,6 +13,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "faker>=40.12.0",
     "isort>=8.0.1",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",

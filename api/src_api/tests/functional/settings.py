@@ -22,6 +22,8 @@ class TestsSettings(BaseSettings):
     elastic_genres_index_name: str = "genres"
     elastic_persons_index_name: str = "persons"
 
+    count_of_test_movies: int = 60
+    
     @computed_field
     @property
     def elastic_movies_index_mapping(self) -> dict:

@@ -1,3 +1,4 @@
+import random
 import uuid
 from typing import AsyncGenerator, Awaitable, Callable
 
@@ -6,11 +7,14 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 from pytest import fixture
 from pytest_asyncio import fixture as async_fixture
+from faker import Faker
 
 from src_api.tests.functional.settings import test_settings
 
 EsWriteDataType = Callable[[str, list[dict]], Awaitable[None]]
 MakeGetRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
+
+fake = Faker()
 
 
 @async_fixture
@@ -50,16 +54,16 @@ async def es_client() -> AsyncGenerator[AsyncElasticsearch, None]:
 
 @async_fixture
 def make_get_request(aiohttp_session: ClientSession) -> MakeGetRequestType:
-    async def inner(path: str, query_data: dict | None = None) -> tuple[dict, int]:
+    async def inner(path: str, params: dict | None = None) -> tuple[dict, int]:
         aiohttp_session = ClientSession()
-        if not query_data:
-            query_data = {}
+        if not params:
+            params = {}
 
         url = test_settings.movies_api_base_url + path
-        async with aiohttp_session.get(url, **query_data) as response:
+        async with aiohttp_session.get(url, params=params) as response:
             body = await response.json()
             status = response.status
-        
+
         return body, status
 
     return inner
@@ -73,32 +77,42 @@ async def aiohttp_session() -> AsyncGenerator[ClientSession, None]:
 
 @fixture
 def movies_es_data() -> list[dict]:
-    es_data = [
-        {
-            "id": str(uuid.uuid4()),
-            "title": "Star Slammer",
-            "description": "Two women who have been unjustly confined to a prison.",
-            "imdb_rating": 3.5,
-            "genres": ["Action", "Sci-Fi", "Comedy"],
-            "directors_names": ["Fred Olen Ray"],
-            "actors_names": ["Suzy Stokey"],
-            "writers_names": ["Fred Olen Ray"],
-            "directors": [
-                {"id": "a2fd6df4-9f3c-4a26-8d59-914470d2aea0", "name": "Fred Olen Ray"},
-            ],
-            "actors": [
-                {"id": "a91ff1c9-98a3-46af-a0d0-e9f2a2b4f51e", "name": "Suzy Stokey"},
-            ],
-            "writers": [
-                {"id": "a2fd6df4-9f3c-4a26-8d59-914470d2aea0", "name": "Fred Olen Ray"},
-            ],
-        }
-        for _ in range(60)
+    test_genres = [
+        "Action",
+        "Sci-Fi",
+        "Comedy",
+        "Drama",
+        "Horror",
+        "Thriller",
+        "Romance",
     ]
+    test_persons = [{"id": uuid.uuid4(), "name": fake.name()} for _ in range(120)]
+
+    movies = []
+    for _ in range(test_settings.count_of_test_movies):
+        actors = random.sample(test_persons, k=random.randint(1, 5))
+        directors = random.sample(test_persons, k=random.randint(1, 5))
+        writers = random.sample(test_persons, k=random.randint(1, 5))
+        
+        movie = {
+            "id": str(uuid.uuid4()),
+            "title": fake.catch_phrase(),
+            "description": fake.paragraph(nb_sentences=3),
+            "imdb_rating": random.uniform(1.0, 10.0),
+            "genres": random.sample(test_genres, k=random.randint(1, 3)),
+            "directors_names": [director["name"] for director in directors],
+            "actors_names": [actor["name"] for actor in actors],
+            "writers_names": [writer["name"] for writer in writers],
+            "directors": directors,
+            "actors": actors,
+            "writers": writers,
+        }
+        movies.append(movie)
+
     bulk_query: list[dict] = []
-    for row in es_data:
+    for row in movies:
         data = {"_index": test_settings.elastic_movies_index_name, "_id": row["id"]}
-        data.update({"_source": row})  # ty: ignore
+        data.update({"_source": row})
         bulk_query.append(data)
 
     return bulk_query
