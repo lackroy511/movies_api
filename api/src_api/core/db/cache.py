@@ -1,8 +1,5 @@
-from src_api.utils.backoff import Backoff
-from src_api.core.db.exceptions import SaveRedisCacheError
-from src_api.features.shared.types import DataclassType
-from abc import ABC, abstractmethod
 import json
+from abc import ABC, abstractmethod
 from dataclasses import asdict, is_dataclass
 from typing import Any, TypeVar
 
@@ -10,6 +7,9 @@ import redis.asyncio as aioredis
 from redis.exceptions import ConnectionError, TimeoutError
 
 from src_api.core.config.settings import settings
+from src_api.core.db.exceptions import SaveRedisCacheError
+from src_api.features.shared.types import DataclassType
+from src_api.utils.backoff import Backoff
 
 pool = aioredis.ConnectionPool.from_url(settings.redis_base_url, max_connections=10)
 client = aioredis.Redis(connection_pool=pool)

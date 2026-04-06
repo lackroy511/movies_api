@@ -1,4 +1,3 @@
-from src_api.features.shared.query_params import PaginationParams
 from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
@@ -8,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src_api.features.genres.v1.exceptions import ErrorMessages, GenreNotFoundError
 from src_api.features.genres.v1.schemas import GenreResponse
 from src_api.features.genres.v1.service import GenresService, get_genres_service
+from src_api.features.shared.query_params import PaginationParams
 from src_api.features.shared.schemas import PaginatedResponse
 
 router = APIRouter(prefix="/v1", tags=["V1 Genres"])

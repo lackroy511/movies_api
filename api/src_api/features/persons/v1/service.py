@@ -3,9 +3,9 @@ from typing import Annotated, cast
 from fastapi import Depends
 
 from src_api.core.db.cache import (
+    CacheClientInterface,
     RedisCacheClient,
     get_redis_client,
-    CacheClientInterface,
 )
 from src_api.features.persons.v1.dto import (
     PersonDetailDTO,
@@ -17,8 +17,8 @@ from src_api.features.persons.v1.dto import (
 from src_api.features.persons.v1.exceptions import PersonNotFoundError
 from src_api.features.persons.v1.repository import (
     PersonsElasticRepo,
-    get_persons_elastic_repo,
     PersonsRepoInterface,
+    get_persons_elastic_repo,
 )
 
 

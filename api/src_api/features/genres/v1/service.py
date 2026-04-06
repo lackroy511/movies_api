@@ -3,15 +3,16 @@ from typing import Annotated, cast
 from fastapi import Depends
 
 from src_api.core.db.cache import (
+    CacheClientInterface,
     RedisCacheClient,
     get_redis_client,
-    CacheClientInterface,
 )
 from src_api.features.genres.v1.dto import Genre, GenresListDTO
 from src_api.features.genres.v1.exceptions import GenreNotFoundError
 from src_api.features.genres.v1.repository import (
     GenresElasticRepo,
-    get_genres_elastic_repo, GenresRepoInterface,
+    GenresRepoInterface,
+    get_genres_elastic_repo,
 )
 
 

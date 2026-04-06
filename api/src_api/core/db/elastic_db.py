@@ -1,16 +1,15 @@
 from typing import Any
-from src_api.utils.backoff import Backoff
-from elasticsearch import AsyncElasticsearch
-from elastic_transport import ObjectApiResponse
-
-from src_api.core.config.settings import settings
 
 from elastic_transport import (
     ConnectionError,
     ConnectionTimeout,
+    ObjectApiResponse,
     TlsError,
 )
+from elasticsearch import AsyncElasticsearch
 
+from src_api.core.config.settings import settings
+from src_api.utils.backoff import Backoff
 
 RETRY_EXCEPTIONS = (
     ConnectionError,

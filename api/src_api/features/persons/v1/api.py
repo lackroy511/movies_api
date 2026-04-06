@@ -1,4 +1,3 @@
-from src_api.features.shared.query_params import PaginationParams
 from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
@@ -7,11 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src_api.features.persons.v1.exceptions import ErrorMessages, PersonNotFoundError
 from src_api.features.persons.v1.schemas import (
+    PersonDetailResponse,
     PersonMovieResponse,
     PersonResponse,
-    PersonDetailResponse,
 )
 from src_api.features.persons.v1.service import PersonsService, get_persons_service
+from src_api.features.shared.query_params import PaginationParams
 from src_api.features.shared.schemas import PaginatedResponse
 from src_api.features.shared.types import SortMoviesType
 

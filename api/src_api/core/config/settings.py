@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     elastic_persons_index_name: str = "persons"
     
     redis_base_url: str = "redis://movies_redis:6379"
-    redis_cache_ttl: int = 60 * 5
+    redis_cache_ttl: int = 30 * 1
     
     log_level: str = "INFO"
 

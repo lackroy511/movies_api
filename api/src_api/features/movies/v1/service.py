@@ -3,16 +3,16 @@ from typing import Annotated, cast
 from fastapi import Depends
 
 from src_api.core.db.cache import (
+    CacheClientInterface,
     RedisCacheClient,
     get_redis_client,
-    CacheClientInterface,
 )
 from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.repository import (
     MoviesElasticRepo,
-    get_movies_elastic_repo,
     MoviesRepoInterface,
+    get_movies_elastic_repo,
 )
 
 

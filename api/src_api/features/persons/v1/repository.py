@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Annotated, Any
 
 import elasticsearch
@@ -13,8 +14,6 @@ from src_api.features.persons.v1.dto import (
     PersonMoviesListDTO,
     PersonsListDTO,
 )
-
-from abc import ABC, abstractmethod
 
 
 class PersonsRepoInterface(ABC):

@@ -1,5 +1,5 @@
-from typing import Annotated, Any
 from abc import ABC, abstractmethod
+from typing import Annotated, Any
 
 import elasticsearch
 from elasticsearch import AsyncElasticsearch
