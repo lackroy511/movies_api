@@ -60,10 +60,27 @@ class GenresElasticRepo(GenresRepoInterface):
 
         if search:
             body["query"] = {
-                "multi_match": {
-                    "query": search,
-                    "fuzziness": "auto",
-                    "fields": self.SEARCH_FIELDS,
+                "bool": {
+                    "should": [
+                        {
+                            "term": {
+                                "name.keyword": {
+                                    "value": search,
+                                    "boost": 10,
+                                },
+                            },
+                        },
+                        {
+                            "match": {
+                                "name": {
+                                    "query": search,
+                                    "operator": "and",
+                                    "boost": 3,
+                                },
+                            },
+                        },
+                    ],
+                    "minimum_should_match": 1,
                 },
             }
 
@@ -73,9 +90,7 @@ class GenresElasticRepo(GenresRepoInterface):
         )
         return GenresListDTO(
             total=result.body["hits"]["total"]["value"],
-            items=[
-                Genre(**genre["_source"]) for genre in result.body["hits"]["hits"]
-            ],
+            items=[Genre(**genre["_source"]) for genre in result.body["hits"]["hits"]],
         )
 
 

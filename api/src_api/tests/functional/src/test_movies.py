@@ -23,7 +23,11 @@ async def test_default_list(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     params = {"page_size": 10}
     body, status = await make_get_request(MOVIES_ENDPOINT, params)
@@ -63,6 +67,7 @@ async def test_cached_list(
     await es_write_data(
         test_settings.elastic_movies_index_name,
         create_movies_es_data(movies_count),
+        test_settings.elastic_movies_index_mapping,
     )
     # Запрос, данные кэшируются
     await check_movies(page_size, 200, expected_total=movies_count)
@@ -80,7 +85,11 @@ async def test_get_by_id(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_data = create_movies_es_data(1)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     movie_id = movies_data[0]["_source"]["id"]
     body, status = await make_get_request(f"{MOVIES_ENDPOINT}/{movie_id}", None)
@@ -98,7 +107,11 @@ async def test_cached_get_by_id(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_data = create_movies_es_data(1)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     movie_id = movies_data[0]["_source"]["id"]
 
@@ -120,7 +133,11 @@ async def test_non_existing_get_by_id(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_data = create_movies_es_data(1)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     movie_id = uuid.uuid4()
     body, status = await make_get_request(f"{MOVIES_ENDPOINT}/{movie_id}", None)
@@ -150,7 +167,11 @@ async def test_pagination(
 ) -> None:
     movies_count = 60
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     params = {"page_number": page_number, "page_size": page_size}
     body, status = await make_get_request(MOVIES_ENDPOINT, params)
@@ -181,7 +202,11 @@ async def test_sorting_movies_by_rating(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     if sort_field.startswith("-"):
         expected_first_item_rating = max(
@@ -208,7 +233,11 @@ async def test_sorting_unexpected_field(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     params = {"sort": "unexpected_field"}
     body, status = await make_get_request(MOVIES_ENDPOINT, params)
@@ -224,7 +253,11 @@ async def test_filter_by_genre(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     genre = test_genre_names[0]
     expected_count = len([m for m in movies_data if genre in m["_source"]["genres"]])
@@ -246,7 +279,11 @@ async def test_filter_by_non_existing_genre(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     genre = "NonExistingGenre"
 
@@ -265,7 +302,11 @@ async def test_search_by_title(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     target_movie = random.choice(movies_data)["_source"]
     search_query = target_movie["title"]
@@ -285,11 +326,16 @@ async def test_search_by_description(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     target_movie = random.choice(movies_data)["_source"]
     description = target_movie["description"]
-    search_query = description[: len(description) // 3]
+    words = description.split()
+    search_query = " ".join(words[: max(1, len(words) // 3)])
 
     params = {"search": search_query}
     body, status = await make_get_request(MOVIES_ENDPOINT, params)
@@ -306,12 +352,16 @@ async def test_search_by_person(
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
     movies_data = create_movies_es_data(movies_count)
-    await es_write_data(test_settings.elastic_movies_index_name, movies_data)
+    await es_write_data(
+        test_settings.elastic_movies_index_name,
+        movies_data,
+        test_settings.elastic_movies_index_mapping,
+    )
 
     target_movie = random.choice(movies_data)["_source"]
     role_keys = ["directors_names", "actors_names", "writers_names"]
     chosen_role = random.choice(role_keys)
-    
+
     random_person = random.choice(target_movie[chosen_role])
 
     params = {"search": random_person}
@@ -319,8 +369,5 @@ async def test_search_by_person(
 
     assert status == 200
     assert len(body["items"]) > 0
-    
-    assert any(
-        random_person in body["items"][0].get(role, []) 
-        for role in role_keys
-    )
+
+    assert any(random_person in body["items"][0].get(role, []) for role in role_keys)

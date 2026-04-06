@@ -12,9 +12,10 @@ from pytest_asyncio import fixture as async_fixture
 
 from src_api.tests.functional.settings import test_settings
 
-EsWriteDataType = Callable[[str, list[dict]], Awaitable[None]]
+EsWriteDataType = Callable[[str, list[dict], dict], Awaitable[None]]
 MakeGetRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
 CreateMoviesDataType = Callable[[int], list[dict]]
+CreateGenresDataType = Callable[[int], list[dict]]
 
 fake = Faker()
 
@@ -24,7 +25,7 @@ def es_write_data(
     es_client: AsyncElasticsearch,
     redis_client: aioredis.Redis,
 ) -> EsWriteDataType:
-    async def inner(index: str, data: list[dict]) -> None:
+    async def inner(index: str, data: list[dict], index_mapping: dict) -> None:
         await redis_client.flushall()
 
         if await es_client.indices.exists(index=index):
@@ -32,7 +33,7 @@ def es_write_data(
 
         await es_client.indices.create(
             index=index,
-            **test_settings.elastic_movies_index_mapping,
+            **index_mapping,
         )
 
         updated, errors = await async_bulk(client=es_client, actions=data)
@@ -136,3 +137,26 @@ def test_genre_names() -> list[str]:
         "Thriller",
         "Romance",
     ]
+
+
+@fixture
+def create_genres_es_data() -> CreateGenresDataType:
+    def inner(genres_count: int) -> list[dict]:
+        genres = []
+        for _ in range(genres_count):
+            genre = {
+                "id": str(uuid.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            }
+            genres.append(genre)
+
+        bulk_query: list[dict] = []
+        for row in genres:
+            data = {"_index": test_settings.elastic_genres_index_name, "_id": row["id"]}
+            data.update({"_source": row})
+            bulk_query.append(data)
+
+        return bulk_query
+
+    return inner

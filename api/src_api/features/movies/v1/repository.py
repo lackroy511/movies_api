@@ -12,8 +12,7 @@ from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 
 class MoviesRepoInterface(ABC):
     @abstractmethod
-    async def get_by_id(self, id: str) -> MovieDTO | None:
-        ...
+    async def get_by_id(self, id: str) -> MovieDTO | None: ...
 
     @abstractmethod
     async def get_list(
@@ -23,8 +22,7 @@ class MoviesRepoInterface(ABC):
         sort: str | None,
         genre: str | None,
         search: str | None,
-    ) -> MoviesListDTO:
-        ...
+    ) -> MoviesListDTO: ...
 
 
 class MoviesElasticRepo(MoviesRepoInterface):
@@ -82,15 +80,37 @@ class MoviesElasticRepo(MoviesRepoInterface):
                 ]
 
             if search:
-                body["query"]["bool"]["must"] = [
-                    {
-                        "multi_match": {
-                            "query": search,
-                            "fuzziness": "auto",
-                            "fields": self.SEARCH_FIELDS,
-                        },
+                body["query"] = {
+                    "bool": {
+                        "should": [
+                            {
+                                "multi_match": {
+                                    "query": search,
+                                    "type": "best_fields",
+                                    "fields": [
+                                        "title^3",
+                                        "description",
+                                        "directors_names^5",
+                                        "actors_names^5",
+                                        "writers_names^5",
+                                    ],
+                                    "fuzziness": "auto",
+                                },
+                            },
+                            {
+                                "multi_match": {
+                                    "query": search,
+                                    "type": "phrase_prefix",
+                                    "fields": [
+                                        "title",
+                                        "description",
+                                    ],
+                                },
+                            },
+                        ],
+                        "minimum_should_match": 1,
                     },
-                ]
+                }
 
         result = await self.client.search(
             index=self.index_name,
