@@ -26,7 +26,7 @@ def es_write_data(
 ) -> EsWriteDataType:
     async def inner(index: str, data: list[dict]) -> None:
         await redis_client.flushall()
-        
+
         if await es_client.indices.exists(index=index):
             await es_client.indices.delete(index=index)
 
@@ -89,17 +89,8 @@ async def aiohttp_session() -> AsyncGenerator[ClientSession, None]:
 
 
 @fixture
-def create_movies_es_data() -> CreateMoviesDataType:
+def create_movies_es_data(test_genre_names: list[str]) -> CreateMoviesDataType:
     def inner(movies_count: int) -> list[dict]:
-        test_genres = [
-            "Action",
-            "Sci-Fi",
-            "Comedy",
-            "Drama",
-            "Horror",
-            "Thriller",
-            "Romance",
-        ]
         test_persons = [{"id": uuid.uuid4(), "name": fake.name()} for _ in range(120)]
 
         movies = []
@@ -112,8 +103,8 @@ def create_movies_es_data() -> CreateMoviesDataType:
                 "id": str(uuid.uuid4()),
                 "title": fake.catch_phrase(),
                 "description": fake.paragraph(nb_sentences=3),
-                "imdb_rating": random.uniform(1.0, 10.0),
-                "genres": random.sample(test_genres, k=random.randint(1, 3)),
+                "imdb_rating": round(random.uniform(1.0, 10.0), 1),
+                "genres": random.sample(test_genre_names, k=random.randint(1, 3)),
                 "directors_names": [director["name"] for director in directors],
                 "actors_names": [actor["name"] for actor in actors],
                 "writers_names": [writer["name"] for writer in writers],
@@ -132,3 +123,16 @@ def create_movies_es_data() -> CreateMoviesDataType:
         return bulk_query
 
     return inner
+
+
+@fixture
+def test_genre_names() -> list[str]:
+    return [
+        "Action",
+        "Sci-Fi",
+        "Comedy",
+        "Drama",
+        "Horror",
+        "Thriller",
+        "Romance",
+    ]
