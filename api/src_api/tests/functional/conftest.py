@@ -16,6 +16,7 @@ EsWriteDataType = Callable[[str, list[dict], dict], Awaitable[None]]
 MakeGetRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
 CreateMoviesDataType = Callable[[int], list[dict]]
 CreateGenresDataType = Callable[[int], list[dict]]
+CreatePersonsDataType = Callable[[int], list[dict]]
 
 fake = Faker()
 
@@ -118,6 +119,31 @@ def create_movies_es_data(test_genre_names: list[str]) -> CreateMoviesDataType:
         bulk_query: list[dict] = []
         for row in movies:
             data = {"_index": test_settings.elastic_movies_index_name, "_id": row["id"]}
+            data.update({"_source": row})
+            bulk_query.append(data)
+
+        return bulk_query
+
+    return inner
+
+
+@fixture
+def create_persons_es_data() -> CreatePersonsDataType:
+    def inner(persons_count: int) -> list[dict]:
+        persons = []
+        for _ in range(persons_count):
+            person = {
+                "id": str(uuid.uuid4()),
+                "full_name": fake.name(),
+            }
+            persons.append(person)
+
+        bulk_query: list[dict] = []
+        for row in persons:
+            data = {
+                "_index": test_settings.elastic_persons_index_name,
+                "_id": row["id"],
+            }
             data.update({"_source": row})
             bulk_query.append(data)
 

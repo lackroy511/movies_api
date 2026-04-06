@@ -18,8 +18,7 @@ from src_api.features.persons.v1.dto import (
 
 class PersonsRepoInterface(ABC):
     @abstractmethod
-    async def get_by_id(self, id: str) -> PersonDetailDTO | None:
-        ...
+    async def get_by_id(self, id: str) -> PersonDetailDTO | None: ...
 
     @abstractmethod
     async def get_list(
@@ -27,8 +26,7 @@ class PersonsRepoInterface(ABC):
         page_number: int,
         page_size: int,
         search: str | None,
-    ) -> PersonsListDTO:
-        ...
+    ) -> PersonsListDTO: ...
 
     @abstractmethod
     async def get_movies_by_person_id(
@@ -37,8 +35,7 @@ class PersonsRepoInterface(ABC):
         page_number: int,
         page_size: int,
         sort: str | None,
-    ) -> PersonMoviesListDTO:
-        ...
+    ) -> PersonMoviesListDTO: ...
 
 
 class PersonsElasticRepo(PersonsRepoInterface):
@@ -64,7 +61,10 @@ class PersonsElasticRepo(PersonsRepoInterface):
                 id=person.body["_source"]["id"],
                 full_name=person.body["_source"]["full_name"],
             )
-        except elasticsearch.NotFoundError:
+        except elasticsearch.NotFoundError as e:
+            if e.message == "index_not_found_exception":
+                raise e
+
             return None
 
     async def get_list(
