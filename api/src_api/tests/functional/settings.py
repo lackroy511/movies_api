@@ -21,8 +21,8 @@ class TestsSettings(BaseSettings):
     elastic_movies_index_name: str = "movies"
     elastic_genres_index_name: str = "genres"
     elastic_persons_index_name: str = "persons"
-
-    count_of_test_movies: int = 60
+    
+    redis_base_url: str = "redis://movies_redis:6379"
     
     @computed_field
     @property

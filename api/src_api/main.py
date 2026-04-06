@@ -1,3 +1,4 @@
+import elasticsearch
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -13,6 +14,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(main_router)
+
+
+@app.exception_handler(elasticsearch.exceptions.NotFoundError)
+async def elastic_not_found_handler(
+    request: Request,
+    exc: elasticsearch.exceptions.NotFoundError,
+) -> JSONResponse:
+    if exc.message == "index_not_found_exception":
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Elastic index not found error"},
+        )
+    
+    raise exc
 
 
 @app.exception_handler(Exception)

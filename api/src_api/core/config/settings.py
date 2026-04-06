@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     base_dir: Path = BASE_DIR
 
-    elastic_base_url: str = "http://localhost:9200"
+    elastic_base_url: str = "http://movies_elastic:9200"
     elastic_movies_index_name: str = "movies"
     elastic_genres_index_name: str = "genres"
     elastic_persons_index_name: str = "persons"
