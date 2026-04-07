@@ -21,7 +21,3 @@ COPY ./uv.lock ./uv.lock
 RUN uv sync
 
 COPY . .
-
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-USER appuser

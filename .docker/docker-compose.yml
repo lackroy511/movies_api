@@ -96,7 +96,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms4g -Xmx4g
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - action.auto_create_index=false
     volumes:
       - esdata:/usr/share/elasticsearch/data
@@ -123,7 +123,6 @@ services:
     depends_on:
       movies_elastic:
         condition: service_healthy
-    <<: *common_defaults
 
   movies_redis:
     container_name: movies_redis

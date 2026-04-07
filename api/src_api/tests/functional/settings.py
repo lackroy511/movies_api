@@ -15,7 +15,7 @@ class TestsSettings(BaseSettings):
 
     base_dir: Path = BASE_DIR
 
-    movies_api_base_url: str = "http://127.0.0.1:8010"
+    movies_api_base_url: str = "http://movies_api:8010"
     
     elastic_base_url: str = "http://movies_elastic:9200"
     elastic_movies_index_name: str = "movies"

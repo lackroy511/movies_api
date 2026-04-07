@@ -1,0 +1,53 @@
+services:
+  movies_api:
+    container_name: movies_api_tests
+    build:
+      context: ../../../.
+      dockerfile: Dockerfile.tests
+    image: movies_api_tests
+    command: >
+      sh -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:8010 src_api.main:app --no-control-socket"
+    env_file:
+      - ../../../../.env
+    depends_on:
+      movies_elastic:
+        condition: service_healthy
+      movies_redis:
+        condition: service_healthy
+
+  movies_api_run_tests:
+    image: movies_api_tests
+    container_name: movies_api_run_tests
+    command: >
+      sh -c "pytest"
+    volumes:
+      - ../../../../.docker:/.docker
+    depends_on:
+      - movies_api
+
+  movies_elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+    container_name: movies_elastic_tests
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - action.auto_create_index=false
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -f http://localhost:9200/_cluster/health || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  movies_redis:
+    container_name: movies_redis_tests
+    image: redis:8
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
