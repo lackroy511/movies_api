@@ -14,7 +14,7 @@ from src_api.tests.functional.settings import test_settings
 
 EsWriteDataType = Callable[[str, list[dict], dict], Awaitable[None]]
 MakeGetRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
-CreateMoviesDataType = Callable[[int], list[dict]]
+CreateMoviesDataType = Callable[[int, list[dict] | None, int | None], list[dict]]
 CreateGenresDataType = Callable[[int], list[dict]]
 CreatePersonsDataType = Callable[[int], list[dict]]
 
@@ -69,7 +69,6 @@ async def redis_client() -> AsyncGenerator[aioredis.Redis, None]:
 @async_fixture
 def make_get_request(aiohttp_session: ClientSession) -> MakeGetRequestType:
     async def inner(path: str, params: dict | None = None) -> tuple[dict, int]:
-        aiohttp_session = ClientSession()
         if not params:
             params = {}
 
@@ -92,14 +91,33 @@ async def aiohttp_session() -> AsyncGenerator[ClientSession, None]:
 
 @fixture
 def create_movies_es_data(test_genre_names: list[str]) -> CreateMoviesDataType:
-    def inner(movies_count: int) -> list[dict]:
-        test_persons = [{"id": uuid.uuid4(), "name": fake.name()} for _ in range(120)]
+    def inner(
+        movies_count: int,
+        test_persons: list[dict] | None,
+        max_persons_per_role: int | None,
+    ) -> list[dict]:
+        if test_persons is None:
+            test_persons = [
+                {"id": uuid.uuid4(), "name": fake.name()} for _ in range(120)
+            ]
 
+        if max_persons_per_role is None:
+            max_persons_per_role = 5
+        
         movies = []
         for _ in range(movies_count):
-            actors = random.sample(test_persons, k=random.randint(1, 5))
-            directors = random.sample(test_persons, k=random.randint(1, 5))
-            writers = random.sample(test_persons, k=random.randint(1, 5))
+            actors = random.sample(
+                test_persons,
+                k=random.randint(1, max_persons_per_role),
+            )
+            directors = random.sample(
+                test_persons,
+                k=random.randint(1, max_persons_per_role),
+            )
+            writers = random.sample(
+                test_persons,
+                k=random.randint(1, max_persons_per_role),
+            )
 
             movie = {
                 "id": str(uuid.uuid4()),

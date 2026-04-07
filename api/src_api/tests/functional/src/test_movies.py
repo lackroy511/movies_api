@@ -22,7 +22,9 @@ async def test_default_list(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    
+    # Из-за сложности типизации передается везде явно None, None в этом вызове
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -66,7 +68,7 @@ async def test_cached_list(
     page_size = 10
     await es_write_data(
         test_settings.elastic_movies_index_name,
-        create_movies_es_data(movies_count),
+        create_movies_es_data(movies_count, None, None),
         test_settings.elastic_movies_index_mapping,
     )
     # Запрос, данные кэшируются
@@ -84,7 +86,7 @@ async def test_get_by_id(
     es_write_data: EsWriteDataType,
     make_get_request: MakeGetRequestType,
 ) -> None:
-    movies_data = create_movies_es_data(1)
+    movies_data = create_movies_es_data(1, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -106,7 +108,7 @@ async def test_cached_get_by_id(
     es_client: AsyncElasticsearch,
     make_get_request: MakeGetRequestType,
 ) -> None:
-    movies_data = create_movies_es_data(1)
+    movies_data = create_movies_es_data(1, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -132,7 +134,7 @@ async def test_non_existing_get_by_id(
     es_write_data: EsWriteDataType,
     make_get_request: MakeGetRequestType,
 ) -> None:
-    movies_data = create_movies_es_data(1)
+    movies_data = create_movies_es_data(1, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -166,7 +168,7 @@ async def test_pagination(
     expected_has_prev: bool,
 ) -> None:
     movies_count = 60
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -201,7 +203,7 @@ async def test_sorting_movies_by_rating(
     sort_field: str,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -232,7 +234,7 @@ async def test_sorting_unexpected_field(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -252,7 +254,7 @@ async def test_filter_by_genre(
     test_genre_names: list[str],
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -278,7 +280,7 @@ async def test_filter_by_non_existing_genre(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -301,7 +303,7 @@ async def test_search_by_title(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -325,7 +327,7 @@ async def test_search_by_description(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
@@ -351,7 +353,7 @@ async def test_search_by_person(
     make_get_request: MakeGetRequestType,
 ) -> None:
     movies_count = DEFAULT_MOVIES_COUNT
-    movies_data = create_movies_es_data(movies_count)
+    movies_data = create_movies_es_data(movies_count, None, None)
     await es_write_data(
         test_settings.elastic_movies_index_name,
         movies_data,
