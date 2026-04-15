@@ -33,7 +33,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     env_file:
-      - ../.env
+      - ../admin_panel/.env
     depends_on:
       movies_database:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
     volumes:
       - etl_logs:/app/logs
     env_file:
-      - ../.env
+      - ../etl/.env
     depends_on:
       movies_database:
         condition: service_healthy
@@ -67,7 +67,7 @@ services:
     command: >
       sh -c "gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8010 src_api.main:app --no-control-socket"
     env_file:
-      - ../.env
+      - ../movies_api/.env
     depends_on:
       movies_elastic:
         condition: service_healthy
@@ -79,10 +79,10 @@ services:
     image: postgres:17
     container_name: movies_database
     env_file:
-      - ../.env
+      - ../admin_panel/.env
     volumes:
       - movies_database:/var/lib/postgresql/data
-      - ../admin_panel/config/db_init:/docker-entrypoint-initdb.d
+      - ../.docker/movies_psql_init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
@@ -134,9 +134,34 @@ services:
       retries: 5
     <<: *common_defaults
 
+  auth_database:
+    image: postgres:17
+    container_name: auth_database
+    env_file:
+      - ../auth_api/.env
+    volumes:
+      - auth_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    <<: *common_defaults
+
+  auth_redis:
+    container_name: auth_redis
+    image: redis:8
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    <<: *common_defaults
+
 volumes:
   movies_database:
   static_volume:
   media_volume:
   esdata:
   etl_logs:
+  auth_database:

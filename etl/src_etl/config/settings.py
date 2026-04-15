@@ -8,13 +8,13 @@ BASE_DIR = Path(__file__).parent.parent.parent
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=BASE_DIR.parent / ".env",
+        env_file=BASE_DIR / ".env",
         extra="ignore",
     )
 
     base_dir: Path = BASE_DIR
     
-    batch_size: int = 100
+    batch_size: int
 
     postgres_db: str
     postgres_user: str
@@ -22,12 +22,12 @@ class Settings(BaseSettings):
     db_host: str
     db_port: int
 
-    elastic_base_url: str = "http://localhost:9200"
-    elastic_movies_index_name: str = "movies"
-    elastic_genres_index_name: str = "genres"
-    elastic_persons_index_name: str = "persons"
+    elastic_base_url: str
+    elastic_movies_index_name: str
+    elastic_genres_index_name: str
+    elastic_persons_index_name: str
 
-    log_level: str = "INFO"
+    log_level: str
     
     @computed_field
     @property

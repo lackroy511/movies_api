@@ -12,16 +12,15 @@ class Settings(BaseSettings):
     )
 
     base_dir: Path = BASE_DIR
-
-    elastic_base_url: str = "http://movies_elastic:9200"
-    elastic_movies_index_name: str = "movies"
-    elastic_genres_index_name: str = "genres"
-    elastic_persons_index_name: str = "persons"
+    log_level: str
     
-    redis_base_url: str = "redis://movies_redis:6379"
-    redis_cache_ttl: int = 60 * 5
+    elastic_base_url: str
+    elastic_movies_index_name: str
+    elastic_genres_index_name: str
+    elastic_persons_index_name: str
     
-    log_level: str = "INFO"
+    redis_base_url: str
+    redis_cache_ttl: int
 
 
-settings = Settings()
+settings = Settings()  # ty: ignore

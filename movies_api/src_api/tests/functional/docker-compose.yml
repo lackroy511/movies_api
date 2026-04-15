@@ -8,7 +8,7 @@ services:
     command: >
       sh -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:8010 src_api.main:app --no-control-socket"
     env_file:
-      - ../../../../.env
+      - ../../../.env
     depends_on:
       movies_elastic:
         condition: service_healthy

@@ -9,6 +9,14 @@ dependencies = [
     "asyncpg>=0.31.0",
     "fastapi[all]>=0.135.3",
     "redis>=7.4.0",
+    "sqlalchemy>=2.0.49",
+]
+
+[dependency-groups]
+dev = [
+    "isort>=8.0.1",
+    "ruff>=0.15.10",
+    "ty>=0.0.30",
 ]
 
 
@@ -17,7 +25,8 @@ line-length = 88
 indent-width = 4
 target-version = "py314"
 exclude = [
-    ".venv"
+    ".venv",
+    "migrations"
 ]
 
 [tool.ruff.lint]
@@ -38,22 +47,17 @@ include_trailing_comma = true
 use_parentheses = true
 line_length = 88
 skip = [
-    ".venv"
+    ".venv",
+    "migrations"
 ]
 
 
 [tool.ty.src]
 exclude = [
-    ".venv"
+    ".venv",
+    "migrations"
 ]
 
 
 [tool.pytest.ini_options]
 asyncio_default_test_loop_scope = "session"
-
-[dependency-groups]
-dev = [
-    "isort>=8.0.1",
-    "ruff>=0.15.10",
-    "ty>=0.0.30",
-]

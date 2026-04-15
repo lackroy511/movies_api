@@ -11,7 +11,7 @@ from src_api.tests.functional.conftest import (
 from src_api.tests.functional.settings import test_settings
 
 
-GENRES_ENDPOINT = "/api/v1/genres"
+GENRES_ENDPOINT = "/api/movies/v1/genres"
 DEFAULT_GENRES_COUNT = 60
 
 

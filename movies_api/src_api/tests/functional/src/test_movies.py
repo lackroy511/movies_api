@@ -11,7 +11,7 @@ from src_api.tests.functional.conftest import (
 from src_api.tests.functional.settings import test_settings
 
 
-MOVIES_ENDPOINT = "/api/v1/movies"
+MOVIES_ENDPOINT = "/api/movies/v1/movies"
 DEFAULT_MOVIES_COUNT = 60
 
 

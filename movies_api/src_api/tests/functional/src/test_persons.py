@@ -12,7 +12,7 @@ from src_api.tests.functional.conftest import (
 from src_api.tests.functional.settings import test_settings
 
 
-PERSONS_ENDPOINT = "/api/v1/persons"
+PERSONS_ENDPOINT = "/api/movies/v1/persons"
 DEFAULT_PERSONS_COUNT = 60
 
 
