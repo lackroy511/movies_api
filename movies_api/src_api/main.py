@@ -7,8 +7,8 @@ from src_api.core.config.lifespan import lifespan
 
 app = FastAPI(
     title="Movies API",
-    docs_url="/api/doc/",
-    openapi_url="/api/doc/openapi.json",
+    docs_url="/api/movies/doc/",
+    openapi_url="/api/movies/doc/openapi.json",
     description="Movies API.",
     version="1.0.0",
     lifespan=lifespan,

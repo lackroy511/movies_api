@@ -1,6 +1,18 @@
-def main():
-    print("Hello from auth-api!")
+from fastapi import FastAPI
+
+from src_auth.api.router import router as main_router
+
+app = FastAPI(
+    title="Auth API",
+    docs_url="/api/auth/doc/",
+    openapi_url="/api/auth/doc/openapi.json",
+    description="Auth API.",
+    version="1.0.0",
+    lifespan=None,
+)
+app.include_router(main_router)
 
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8020)
