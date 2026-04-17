@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     
     @computed_field
     @property
-    def db_dsn(self) -> str:
+    def db_url(self) -> str:
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.db_host}:{self.db_port}/{self.postgres_db}"  # noqa: E501
 
 

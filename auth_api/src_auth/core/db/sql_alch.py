@@ -1,17 +1,15 @@
-import re
+from datetime import datetime
 from typing import AsyncGenerator
+from uuid import UUID, uuid4
 
-from sqlalchemy import MetaData
+from sqlalchemy import DateTime, MetaData, Uuid, func
 from sqlalchemy.ext.asyncio import (
     AsyncAttrs,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
-
-from datetime import datetime
-from sqlalchemy import DateTime, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src_auth.core.config.settings import settings
 
@@ -29,6 +27,11 @@ class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
     metadata = metadata
 
+    id: Mapped[UUID] = mapped_column(
+        Uuid,
+        primary_key=True,
+        default=uuid4,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -39,14 +42,8 @@ class Base(AsyncAttrs, DeclarativeBase):
         onupdate=func.now(),
     )
 
-    @declared_attr.directive
-    def __tablename__(cls) -> str:  # noqa: N805
-        """CamelCase to snake_case"""
-        s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__.lower())
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower() + "s"
 
-
-engine = create_async_engine(settings.db_dsn)
+engine = create_async_engine(settings.db_url)
 sessionmaker = async_sessionmaker(
     engine,
     expire_on_commit=False,

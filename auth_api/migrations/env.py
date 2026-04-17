@@ -9,9 +9,13 @@ from alembic import context
 from src_auth.core.config.settings import settings
 from src_auth.core.db.sql_alch import Base
 
+from src_auth.features.users.v1.models import User
+from src_auth.features.roles.v1.models import Role, user_roles
+from src_auth.features.auth.v1.models import AuthHistory
+
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.db_dsn)
+config.set_main_option("sqlalchemy.url", settings.db_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
