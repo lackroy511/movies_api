@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/v1", tags=["Roles"])
+router = APIRouter(prefix="/v1", tags=["Roles V1"])
 
 
 @router.post("/roles")
@@ -23,11 +23,16 @@ async def delete_role(role_id: int) -> dict:
     return {"message": f"Delete role {role_id} success"}
 
 
-@router.get("/roles/assign")
+@router.post("/roles/{role_id}/users/{user_id}")
 async def assign_role() -> dict:
     return {"message": "Assign role success"}
 
 
-@router.delete("/roles/revoke")
+@router.get("/roles/{role_id}/users/{user_id}")
+async def check_role_assignment() -> dict:
+    return {"message": "Check role assignment success"}
+
+
+@router.delete("/roles/{role_id}/users/{user_id}")
 async def revoke_role() -> dict:
     return {"message": "Revoke role success"}
