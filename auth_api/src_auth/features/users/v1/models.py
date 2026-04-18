@@ -1,4 +1,4 @@
-from sqlalchemy import String, Text
+from sqlalchemy import String, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src_auth.core.db.sql_alch import Base
@@ -21,6 +21,10 @@ class User(Base):
     )
     password_hash: Mapped[str] = mapped_column(
         Text,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
     )
 
     def __repr__(self) -> str:

@@ -15,7 +15,7 @@ client = aioredis.Redis(connection_pool=pool)
 
 class CacheClientInterface(ABC):
     @abstractmethod
-    async def set_cache(self, key: str, data: dict[str, Any]) -> None: ...
+    async def set_cache(self, key: str, data: dict[str, Any], ttl: int) -> None: ...
 
     @abstractmethod
     async def get_cache(self, key: str) -> dict[str, Any] | None: ...
@@ -23,9 +23,9 @@ class CacheClientInterface(ABC):
     @abstractmethod
     async def delete_cache(self, key: str) -> int: ...
 
-    @abstractmethod
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
-        ...
+        key = ":".join(map(str, key_args))
+        return f"{prefix}:{key}"
 
 
 RETRY_EXCEPTIONS = (
@@ -58,10 +58,6 @@ class RedisCacheClient(CacheClientInterface):
     async def delete_cache(self, key: str) -> int:
         return await self.client.delete(key)
 
-    def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
-        key = ":".join(map(str, key_args))
-        return f"{prefix}:{key}"
 
-
-def get_redis_client() -> RedisCacheClient:
+def get_redis_client() -> CacheClientInterface:
     return RedisCacheClient(client)

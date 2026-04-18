@@ -50,6 +50,8 @@ sessionmaker = async_sessionmaker(
 )
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with sessionmaker() as session:
+        # TODO: обернуть execute в Backoff
+        # TODO: Закастомить в commit, делать rollback при ошибках
         yield session
