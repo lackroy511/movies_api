@@ -1,7 +1,8 @@
+from src_auth.features.auth.v1.exceptions import RegisterUserAlreadyExistsError
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
 from typing import Annotated
 from src_auth.features.auth.v1.schemas import RegisterRequest, RegisteredUserResponse
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
 
@@ -11,13 +12,19 @@ async def register(
     user_data: RegisterRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> RegisteredUserResponse:
-    new_user = await auth_service.register_user(
-        email=user_data.email,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
-        password=user_data.password,
-    )
-    return RegisteredUserResponse.model_validate(new_user)
+    try:
+        new_user = await auth_service.register_user(
+            email=user_data.email,
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            password=user_data.password,
+        )
+        return RegisteredUserResponse.model_validate(new_user)
+    except RegisterUserAlreadyExistsError:
+        raise HTTPException(
+            status_code=409,
+            detail="User already exists",
+        ) from None
 
 
 @router.post("/login")

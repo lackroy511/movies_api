@@ -1,3 +1,7 @@
+from src_auth.features.users.v1.exceptions import UserAlreadyExistsError
+
+
+from sqlalchemy.exc import IntegrityError
 from src_auth.features.shared.dto import UserDTO
 from src_auth.core.db.sql_alch import get_db_session
 from fastapi import Depends
@@ -36,7 +40,12 @@ class UserRepo(UserRepoInterface):
             )
             .returning(User)
         )
-        result = await self.session.execute(query)
+        try:
+            result = await self.session.execute(query)
+        except IntegrityError as e:
+            if "unique constraint" in str(e).lower():
+                raise UserAlreadyExistsError("User already exists") from None
+        
         created = result.scalar_one()
         return UserDTO(
             id=created.id,

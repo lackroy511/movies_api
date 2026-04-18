@@ -1,0 +1,4 @@
+
+
+class RegisterUserAlreadyExistsError(Exception):
+    pass
