@@ -8,6 +8,8 @@ dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
     "fastapi[all]>=0.135.3",
+    "passlib>=1.7.4",
+    "pyjwt>=2.12.1",
     "redis>=7.4.0",
     "sqlalchemy>=2.0.49",
 ]

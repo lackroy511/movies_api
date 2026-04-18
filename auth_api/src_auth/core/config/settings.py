@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     db_host: str
     db_port: int
     
+    access_token_expire_minutes: int
+    refresh_token_expire_days: int
+    
+    secret_key: str
+    
     @computed_field
     @property
     def db_url(self) -> str:
