@@ -1,9 +1,12 @@
+import logging
 import elasticsearch
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from src_api.api.router import router as main_router
 from src_api.core.config.lifespan import lifespan
+
+log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Movies API",
@@ -35,6 +38,11 @@ async def unexpected_error_handler(
     request: Request,
     exc: Exception,
 ) -> JSONResponse:
+    try:
+        raise exc
+    except Exception:
+        log.exception("Unexpected error")
+    
     return JSONResponse(
         status_code=500,
         content={"detail": "Unexpected server error"},
