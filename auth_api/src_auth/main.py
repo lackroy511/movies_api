@@ -1,3 +1,4 @@
+from src_auth.core.config.lifespan import lifespan
 from fastapi import FastAPI
 
 from src_auth.api.router import router as main_router
@@ -8,7 +9,7 @@ app = FastAPI(
     openapi_url="/api/auth/doc/openapi.json",
     description="Auth API.",
     version="1.0.0",
-    lifespan=None,
+    lifespan=lifespan,
 )
 app.include_router(main_router)
 
