@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import ForeignKey, Text, Uuid, DateTime, func
+
+from sqlalchemy import DateTime, ForeignKey, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src_auth.core.db.sql_alch import Base
