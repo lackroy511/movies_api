@@ -1,11 +1,13 @@
-from src_auth.features.shared.dto import UserDTO
-from fastapi import Depends
 from typing import Annotated
+
+from fastapi import Depends
+
 from src_auth.core.security.hash_pass import hash_password
+from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.dto import CreateUserDTO
 from src_auth.features.users.v1.repository import (
-    get_user_repository,
     UserRepoInterface,
+    get_user_repository,
 )
 
 

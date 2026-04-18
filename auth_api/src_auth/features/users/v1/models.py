@@ -1,4 +1,4 @@
-from sqlalchemy import String, Text, Boolean
+from sqlalchemy import Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src_auth.core.db.sql_alch import Base

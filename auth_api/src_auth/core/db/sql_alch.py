@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, MetaData, Uuid, func
+from sqlalchemy.engine import Result
+from sqlalchemy.exc import DBAPIError, OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncAttrs,
     AsyncSession,
@@ -12,6 +14,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src_auth.core.config.settings import settings
+from src_auth.utils.backoff import Backoff
 
 naming_convention = {
     "ix": "ix_%(column_0_label)s",
@@ -43,15 +46,35 @@ class Base(AsyncAttrs, DeclarativeBase):
     )
 
 
+RETRY_EXCEPTIONS = (
+    OperationalError,
+    DBAPIError,
+)
+
+
+class BackoffAsyncSession(AsyncSession):
+    @Backoff(RETRY_EXCEPTIONS)
+    async def execute(self, *args: Any, **kwargs: Any) -> Result[Any]:  # noqa: ANN401
+        return await super().execute(*args, **kwargs)
+
+    async def commit(self) -> None:
+        try:
+            await super().commit()
+        except SQLAlchemyError:
+            try:
+                await self.rollback()
+            finally:
+                raise
+
+
 engine = create_async_engine(settings.db_url)
 sessionmaker = async_sessionmaker(
     engine,
+    class_=BackoffAsyncSession,
     expire_on_commit=False,
 )
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with sessionmaker() as session:
-        # TODO: обернуть execute в Backoff
-        # TODO: Закастомить в commit, делать rollback при ошибках
         yield session

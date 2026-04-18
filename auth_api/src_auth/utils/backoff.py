@@ -3,6 +3,8 @@ import logging
 from functools import wraps
 from typing import Any, Callable
 
+from sqlalchemy.exc import DBAPIError
+
 log = logging.getLogger(__name__)
 
 
@@ -20,23 +22,26 @@ class Backoff:
         self.factor = factor
         self.max_delay = max_delay
 
-        self.delay = start_delay
-
     def __call__(self, func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+            delay = self.start_delay
+
             while True:
                 try:
                     result = await func(*args, **kwargs)
-                    self.delay = self.start_delay
+                    delay = self.start_delay
                     return result
                 except self.exceptions as e:
+                    if isinstance(e, DBAPIError) and not e.connection_invalidated:
+                        raise
+
                     log.exception("Backoff for exception:")
-                    await asyncio.sleep(self.delay)
-                    if self.delay < self.max_delay:
-                        self.delay *= self.factor
-                    
-                    if self.delay >= self.max_delay:
+                    await asyncio.sleep(delay)
+                    if delay < self.max_delay:
+                        delay *= self.factor
+
+                    if delay >= self.max_delay:
                         raise e
 
         return wrapper

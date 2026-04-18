@@ -1,8 +1,10 @@
-from src_auth.features.auth.v1.exceptions import RegisterUserAlreadyExistsError
-from src_auth.features.auth.v1.service import AuthService, get_auth_service
 from typing import Annotated
-from src_auth.features.auth.v1.schemas import RegisterRequest, RegisteredUserResponse
+
 from fastapi import APIRouter, Depends, HTTPException
+
+from src_auth.features.auth.v1.exceptions import RegisterUserAlreadyExistsError
+from src_auth.features.auth.v1.schemas import RegisteredUserResponse, RegisterRequest
+from src_auth.features.auth.v1.service import AuthService, get_auth_service
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
 

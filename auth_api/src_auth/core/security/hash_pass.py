@@ -1,5 +1,5 @@
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, InvalidHash
+from argon2.exceptions import InvalidHash, VerifyMismatchError
 
 password_hasher = PasswordHasher(
     time_cost=2,

@@ -1,11 +1,12 @@
-from src_auth.features.auth.v1.exceptions import RegisterUserAlreadyExistsError
-from src_auth.features.users.v1.exceptions import UserAlreadyExistsError
-from fastapi import Depends
 from typing import Annotated
-from src_auth.features.shared.dto import UserDTO
 
-from src_auth.features.users.v1.service import UserService, get_user_service
+from fastapi import Depends
+
+from src_auth.features.auth.v1.exceptions import RegisterUserAlreadyExistsError
 from src_auth.features.auth.v1.repository import AuthRepoInterface, get_auth_repository
+from src_auth.features.shared.dto import UserDTO
+from src_auth.features.users.v1.exceptions import UserAlreadyExistsError
+from src_auth.features.users.v1.service import UserService, get_user_service
 
 
 class AuthService:
