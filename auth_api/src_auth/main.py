@@ -1,10 +1,10 @@
 import logging
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
 from src_auth.api.router import router as main_router
 from src_auth.core.config.lifespan import lifespan
+from src_auth.core.exc.handlers import register_exception_handlers
 
 log = logging.getLogger(__name__)
 
@@ -18,22 +18,7 @@ app = FastAPI(
 )
 app.include_router(main_router)
 
-
-@app.exception_handler(Exception)
-async def unexpected_error_handler(
-    request: Request,
-    exc: Exception,
-) -> JSONResponse:
-    try:
-        raise exc
-    except Exception:
-        log.exception("Unexpected error")
-    
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Unexpected server error"},
-    )
-
+register_exception_handlers(app)
 
 if __name__ == "__main__":
     import uvicorn

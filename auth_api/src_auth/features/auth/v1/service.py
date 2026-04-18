@@ -2,10 +2,8 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from src_auth.features.auth.v1.exceptions import RegisterUserAlreadyExistsError
 from src_auth.features.auth.v1.repository import AuthRepoInterface, get_auth_repository
 from src_auth.features.shared.dto import UserDTO
-from src_auth.features.users.v1.exceptions import UserAlreadyExistsError
 from src_auth.features.users.v1.service import UserService, get_user_service
 
 
@@ -25,15 +23,12 @@ class AuthService:
         last_name: str | None,
         password: str,
     ) -> UserDTO:
-        try:
-            return await self.user_service.create_user(
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                password=password,
-            )
-        except UserAlreadyExistsError:
-            raise RegisterUserAlreadyExistsError("User already exists") from None
+        return await self.user_service.create_user(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+        )
 
 
 async def get_auth_service(

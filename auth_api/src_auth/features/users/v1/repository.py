@@ -7,9 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.core.db.sql_alch import get_db_session
+from src_auth.core.exc.exceptions import UserAlreadyExistsError
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.dto import CreateUserDTO
-from src_auth.features.users.v1.exceptions import UserAlreadyExistsError
 from src_auth.features.users.v1.models import User
 
 
