@@ -1,11 +1,11 @@
-from src_auth.core.security.jwt import create_token
-from src_auth.core.exc.exceptions import InvalidCredentialsError
-from src_auth.core.security.hash_pass import verify_password
-from src_auth.core.security.cookies import set_token_cookie
 from typing import Annotated
 
 from fastapi import Depends, Response
 
+from src_auth.core.exc.exceptions import InvalidCredentialsError
+from src_auth.core.security.cookies import set_token_cookie
+from src_auth.core.security.hash_pass import verify_password
+from src_auth.core.security.jwt import create_token
 from src_auth.features.auth.v1.repository import AuthRepoInterface, get_auth_repository
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service

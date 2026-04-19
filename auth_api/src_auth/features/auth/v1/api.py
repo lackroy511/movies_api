@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 
 from src_auth.features.auth.v1.schemas import (
-    UserResponse,
-    RegisterRequest,
     LoginRequest,
+    RegisterRequest,
+    UserResponse,
 )
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
 

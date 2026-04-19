@@ -1,8 +1,8 @@
-from src_auth.core.exc.exceptions import UserNotFoundError
 from typing import Annotated
 
 from fastapi import Depends
 
+from src_auth.core.exc.exceptions import UserNotFoundError
 from src_auth.core.security.hash_pass import hash_password
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.dto import CreateUserDTO

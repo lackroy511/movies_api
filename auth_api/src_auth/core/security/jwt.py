@@ -1,6 +1,6 @@
-from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from typing import Literal
+from uuid import UUID
 
 import jwt
 from pydantic import BaseModel
