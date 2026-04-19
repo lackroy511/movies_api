@@ -10,3 +10,4 @@ class CreateUserDTO:
     
     # TODO: изменить на False после реализации регистрации через email
     is_active: bool = True
+    is_superuser: bool = False

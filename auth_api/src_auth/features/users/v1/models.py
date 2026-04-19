@@ -24,7 +24,11 @@ class User(Base):
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
-        default=False,
+        server_default="false",
+    )
+    is_superuser: Mapped[bool] = mapped_column(
+        Boolean,
+        server_default="false",
     )
 
     def __repr__(self) -> str:
