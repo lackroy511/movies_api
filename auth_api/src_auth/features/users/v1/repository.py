@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,15 +16,19 @@ from src_auth.features.users.v1.models import User
 class UserRepoInterface(ABC):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
-    
+
     @abstractmethod
     async def create(self, user: CreateUserDTO) -> UserDTO:
+        pass
+
+    @abstractmethod
+    async def get_by_email(self, email: str) -> UserDTO | None:
         pass
 
 
 class UserRepo(UserRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session) 
+        super().__init__(session)
 
     async def create(self, user: CreateUserDTO) -> UserDTO:
         query = (
@@ -44,17 +48,33 @@ class UserRepo(UserRepoInterface):
         except IntegrityError as e:
             if "unique constraint" in str(e).lower():
                 raise UserAlreadyExistsError("User already exists") from None
-        
+
         created = result.scalar_one()
+        return self._transform_to_dto(created)
+
+    async def get_by_email(self, email: str) -> UserDTO | None:
+        query = select(User).where(
+            User.email == email,
+            User.is_active == True,  # noqa: E712
+        )
+        result = await self.session.execute(query)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return None
+
+        return self._transform_to_dto(user)
+
+    def _transform_to_dto(self, user: User) -> UserDTO:
         return UserDTO(
-            id=created.id,
-            email=created.email,
-            first_name=created.first_name,
-            last_name=created.last_name,
-            is_active=created.is_active,
-            is_superuser=created.is_superuser,
-            created_at=created.created_at,
-            updated_at=created.updated_at,
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            password_hash=user.password_hash,
+            is_active=user.is_active,
+            is_superuser=user.is_superuser,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
         )
 
 

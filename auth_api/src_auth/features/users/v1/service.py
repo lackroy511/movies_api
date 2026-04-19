@@ -1,3 +1,4 @@
+from src_auth.core.exc.exceptions import UserNotFoundError
 from typing import Annotated
 
 from fastapi import Depends
@@ -31,6 +32,13 @@ class UserService:
         created_user = await self.repository.create(to_create)
         await self.repository.session.commit()
         return created_user
+
+    async def get_user_by_email(self, email: str) -> UserDTO:
+        user = await self.repository.get_by_email(email)
+        if not user:
+            raise UserNotFoundError("User not found")
+
+        return user
 
 
 async def get_user_service(

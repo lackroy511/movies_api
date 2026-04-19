@@ -3,8 +3,6 @@ import logging
 from functools import wraps
 from typing import Any, Callable
 
-from sqlalchemy.exc import DBAPIError
-
 log = logging.getLogger(__name__)
 
 
@@ -33,9 +31,6 @@ class Backoff:
                     delay = self.start_delay
                     return result
                 except self.exceptions as e:
-                    if isinstance(e, DBAPIError) and not e.connection_invalidated:
-                        raise
-
                     log.exception("Backoff for exception:")
                     await asyncio.sleep(delay)
                     if delay < self.max_delay:

@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, MetaData, Uuid, func
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import DBAPIError, OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncAttrs,
     AsyncSession,
@@ -48,7 +48,6 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 RETRY_EXCEPTIONS = (
     OperationalError,
-    DBAPIError,
 )
 
 

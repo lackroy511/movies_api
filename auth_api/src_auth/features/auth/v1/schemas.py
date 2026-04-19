@@ -19,7 +19,7 @@ class RegisterRequest(BaseModel):
         return self
 
 
-class RegisteredUserResponse(BaseModel):
+class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True) 
     
     id: UUID
@@ -30,3 +30,8 @@ class RegisteredUserResponse(BaseModel):
     is_superuser: bool
     created_at: datetime
     updated_at: datetime
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=4, max_length=100)

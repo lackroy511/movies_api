@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
@@ -14,14 +15,14 @@ class IncorrectTokenTypeError(Exception):
 
 
 class TokenData(BaseModel):
-    user_id: int
-    user_role: str
+    user_id: str
+    user_roles: list[str]
     iat: datetime
     exp: datetime
     type: TokenType
 
 
-def create_token(user_id: int, user_role: str, token_type: TokenType) -> str:
+def create_token(user_id: UUID, user_roles: list[str], token_type: TokenType) -> str:
     if token_type == "access":
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.access_token_expire_minutes,
@@ -32,8 +33,8 @@ def create_token(user_id: int, user_role: str, token_type: TokenType) -> str:
         )
 
     to_encode = TokenData(
-        user_id=user_id,
-        user_role=user_role,
+        user_id=str(user_id),
+        user_roles=user_roles,
         iat=datetime.now(timezone.utc),
         exp=expire,
         type=token_type,

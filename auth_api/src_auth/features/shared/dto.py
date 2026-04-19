@@ -9,6 +9,7 @@ class UserDTO:
     email: str
     first_name: str
     last_name: str | None
+    password_hash: str
     is_active: bool
     is_superuser: bool
     created_at: datetime
