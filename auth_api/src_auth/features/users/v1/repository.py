@@ -14,6 +14,9 @@ from src_auth.features.users.v1.models import User
 
 
 class UserRepoInterface(ABC):
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+    
     @abstractmethod
     async def create(self, user: CreateUserDTO) -> UserDTO:
         pass
@@ -25,7 +28,7 @@ class UserRepoInterface(ABC):
 
 class UserRepo(UserRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
-        self.session = session
+        super().__init__(session)
 
     async def create(self, user: CreateUserDTO) -> UserDTO:
         query = (

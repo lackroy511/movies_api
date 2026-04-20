@@ -1,15 +1,17 @@
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends, Response, Request
+from fastapi import Depends, Request, Response
 
 from src_auth.core.exc.exceptions import InvalidCredentialsError
 from src_auth.core.security.cookies import set_token_cookie
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import create_token
 from src_auth.features.auth.v1.repository import (
-    get_blacklist_token_repository,
     TokenBlacklistRepoInterface,
-    TokenVersionRepoInterface, get_version_token_repository,
+    TokenVersionRepoInterface,
+    get_blacklist_token_repository,
+    get_version_token_repository,
 )
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
@@ -53,20 +55,25 @@ class AuthService:
     ) -> UserDTO:
         user = await self.user_service.get_user_by_email(email)
         # user_agent = request.headers.get("user-agent")
-
         if not verify_password(password, user.password_hash):
             raise InvalidCredentialsError("Invalid credentials")
 
         # TODO: Получать роли пользователя
         roles = ["regular_user"]
-
-        token_version = 0
+        token_version = await self._get_token_version(user_id=user.id)
 
         access_token = create_token(user.id, roles, "access", token_version)
         refresh_token = create_token(user.id, roles, "refresh", token_version)
         set_token_cookie(response, access_token, refresh_token)
-
         return user
+
+    async def _get_token_version(self, user_id: UUID) -> int:
+        ver = await self.version_repo.get_user_token_version(user_id)
+        if not ver:
+            ver = await self.version_repo.create_user_token_version(user_id)
+            await self.version_repo.session.commit()
+
+        return ver.version
 
 
 async def get_auth_service(

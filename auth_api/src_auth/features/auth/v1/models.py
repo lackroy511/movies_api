@@ -1,8 +1,7 @@
-import token
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Text, Uuid, func, Integer
+from sqlalchemy import DateTime, ForeignKey, Integer, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src_auth.core.db.sql_alch import Base
