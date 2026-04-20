@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.db.sql_alch import get_db_session
-from src_auth.features.auth.v1.dto import TokenVersionDTO
-from src_auth.features.auth.v1.models import TokenVersion
+from src_auth.features.auth.v1.dto import AuthHistoryDTO, TokenVersionDTO
+from src_auth.features.auth.v1.models import AuthHistory, TokenVersion
 
 
 class TokenBlacklistRepoInterface(ABC):
@@ -50,11 +50,11 @@ class TokenBlacklistRepo(TokenBlacklistRepoInterface):
 class TokenVersionRepoInterface(ABC):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
-    
+
     @abstractmethod
     async def create_user_token_version(self, user_id: UUID) -> TokenVersionDTO:
         pass
-    
+
     @abstractmethod
     async def get_user_token_version(self, user_id: UUID) -> TokenVersionDTO | None:
         pass
@@ -76,15 +76,15 @@ class TokenVersionRepo(TokenVersionRepoInterface):
         )
         result = await self.session.execute(query)
         created = result.scalar_one()
-        return TokenVersionDTO(user_id=created.user_id, version=created.version) 
-    
+        return TokenVersionDTO(user_id=created.user_id, version=created.version)
+
     async def get_user_token_version(self, user_id: UUID) -> TokenVersionDTO | None:
         query = select(TokenVersion).where(TokenVersion.user_id == user_id)
         result = await self.session.execute(query)
         token_ver = result.scalar_one_or_none()
         if token_ver is None:
             return None
-            
+
         return TokenVersionDTO(user_id=token_ver.user_id, version=token_ver.version)
 
     async def increment_user_token_version(self, user_id: UUID) -> None:
@@ -96,13 +96,73 @@ class TokenVersionRepo(TokenVersionRepoInterface):
         await self.session.execute(query)
 
 
-async def get_blacklist_token_repository(
-    cache_client: Annotated[CacheClientInterface, Depends(get_redis_client)],
-) -> TokenBlacklistRepoInterface:
-    return TokenBlacklistRepo(cache_client)
+class AuthHistoryRepoInterface(ABC):
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    @abstractmethod
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> AuthHistoryDTO:
+        pass
+
+    @abstractmethod
+    async def get_user_auth_history(self, user_id: UUID) -> list[AuthHistoryDTO]:
+        pass
+
+
+class AuthHistoryRepo(AuthHistoryRepoInterface):
+    def __init__(self, session: AsyncSession) -> None:
+        super().__init__(session)
+
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> AuthHistoryDTO:
+        query = (
+            insert(AuthHistory)
+            .values(user_id=user_id, user_agent=user_agent)
+            .returning(AuthHistory)
+        )
+        result = await self.session.execute(query)
+        created = result.scalar_one()
+        return AuthHistoryDTO(
+            user_id=created.user_id,
+            user_agent=created.user_agent,
+            auth_at=created.auth_at,
+        )
+
+    async def get_user_auth_history(
+        self,
+        user_id: UUID,
+        limit: int = 10,
+    ) -> list[AuthHistoryDTO]:
+        query = (
+            select(AuthHistory)
+            .where(AuthHistory.user_id == user_id)
+            .order_by(AuthHistory.auth_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        history = result.scalars().all()
+        return [
+            AuthHistoryDTO(
+                user_id=h.user_id,
+                user_agent=h.user_agent,
+                auth_at=h.auth_at,
+            )
+            for h in history
+        ]
 
 
 async def get_version_token_repository(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> TokenVersionRepoInterface:
     return TokenVersionRepo(session)
+
+
+async def get_blacklist_token_repository(
+    cache_client: Annotated[CacheClientInterface, Depends(get_redis_client)],
+) -> TokenBlacklistRepoInterface:
+    return TokenBlacklistRepo(cache_client)
+
+
+async def get_auth_history_repository(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> AuthHistoryRepoInterface:
+    return AuthHistoryRepo(session)

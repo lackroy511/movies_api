@@ -12,6 +12,8 @@ from src_auth.features.auth.v1.repository import (
     TokenVersionRepoInterface,
     get_blacklist_token_repository,
     get_version_token_repository,
+    AuthHistoryRepoInterface,
+    get_auth_history_repository,
 )
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
@@ -22,10 +24,12 @@ class AuthService:
         self,
         blacklist_repo: TokenBlacklistRepoInterface,
         version_repo: TokenVersionRepoInterface,
+        auth_history_repo: AuthHistoryRepoInterface,
         user_service: UserService,
     ) -> None:
         self.blacklist_repo = blacklist_repo
         self.version_repo = version_repo
+        self.auth_history_repo = auth_history_repo
 
         self.user_service = user_service
 
@@ -53,25 +57,28 @@ class AuthService:
         password: str,
         response: Response,
     ) -> UserDTO:
-        user = await self.user_service.get_user_by_email(email)
-        # user_agent = request.headers.get("user-agent")
-        if not verify_password(password, user.password_hash):
-            raise InvalidCredentialsError("Invalid credentials")
+        async with self.auth_history_repo.session.begin():
+            user = await self.user_service.get_user_by_email(email)
+            if not verify_password(password, user.password_hash):
+                raise InvalidCredentialsError("Invalid credentials")
 
-        # TODO: Получать роли пользователя
-        roles = ["regular_user"]
-        token_version = await self._get_token_version(user_id=user.id)
+            user_agent = request.headers.get("user-agent", "Unknown user-agent")
+            await self.auth_history_repo.create_auth_entry(user.id, user_agent)
+            
+            # TODO: Получать роли пользователя
+            roles = ["regular_user"]
+            token_version = await self._get_token_version(user_id=user.id)
 
-        access_token = create_token(user.id, roles, "access", token_version)
-        refresh_token = create_token(user.id, roles, "refresh", token_version)
-        set_token_cookie(response, access_token, refresh_token)
-        return user
+            access_token = create_token(user.id, roles, "access", token_version)
+            refresh_token = create_token(user.id, roles, "refresh", token_version)
+            set_token_cookie(response, access_token, refresh_token)
+
+            return user
 
     async def _get_token_version(self, user_id: UUID) -> int:
         ver = await self.version_repo.get_user_token_version(user_id)
         if not ver:
             ver = await self.version_repo.create_user_token_version(user_id)
-            await self.version_repo.session.commit()
 
         return ver.version
 
@@ -85,6 +92,10 @@ async def get_auth_service(
         TokenVersionRepoInterface,
         Depends(get_version_token_repository),
     ],
+    auth_history_repo: Annotated[
+        AuthHistoryRepoInterface,
+        Depends(get_auth_history_repository),
+    ],
     user_service: Annotated[
         UserService,
         Depends(get_user_service),
@@ -94,5 +105,6 @@ async def get_auth_service(
     return AuthService(
         blacklist_repo=blacklist_repo,
         version_repo=version_repo,
+        auth_history_repo=auth_history_repo,
         user_service=user_service,
     )
