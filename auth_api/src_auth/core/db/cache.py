@@ -27,6 +27,9 @@ class CacheClientInterface(ABC):
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
         pass
 
+    @abstractmethod
+    async def scan_keys(self, pattern: str) -> list[str]: ...
+
 
 RETRY_EXCEPTIONS = (
     ConnectionError,
@@ -57,6 +60,21 @@ class RedisCacheClient(CacheClientInterface):
     @Backoff(RETRY_EXCEPTIONS)
     async def delete_cache(self, key: str) -> int:
         return await self.client.delete(key)
+
+    @Backoff(RETRY_EXCEPTIONS)
+    async def scan_keys(self, pattern: str) -> list[str]:
+        keys = []
+        cursor = 0
+        while True:
+            cursor, keys_batch = await self.client.scan(
+                cursor=cursor,
+                match=pattern,
+                count=100,
+            )
+            keys.extend(keys_batch)
+            if cursor == 0:
+                break
+        return keys
     
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
         key = ":".join(map(str, key_args))

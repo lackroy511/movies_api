@@ -57,7 +57,8 @@ class AuthService:
         refresh_token = create_token(user.id, roles, "refresh")
         set_token_cookie(response, access_token, refresh_token)
 
-        # TODO: Сохранять токены в Redis
+        await self.token_repo.save_access_token(access_token, str(user.id))
+        await self.token_repo.save_refresh_token(refresh_token, str(user.id))
 
         return user
 
