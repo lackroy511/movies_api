@@ -7,24 +7,24 @@ from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.core.db.sql_alch import get_db_session
-from src_auth.features.roles.v1.dto import RoleDTO
+from src_auth.features.roles.v1.dto import RoleDTO, CreateRoleDTO
 from src_auth.features.roles.v1.models import Role, RoleName, user_roles
 
 
 class RoleRepositoryInterface(ABC):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
     @abstractmethod
     async def create_role(
         self,
-        name: RoleName,
-        description: str | None = None,
+        role: CreateRoleDTO,
     ) -> RoleDTO:
         pass
 
     @abstractmethod
     async def get_all_roles(self) -> list[RoleDTO]:
+        pass
+
+    @abstractmethod
+    async def get_all_user_roles(self, user_id: UUID) -> list[RoleDTO]:
         pass
 
     @abstractmethod
@@ -59,20 +59,37 @@ class RoleRepositoryInterface(ABC):
 
 class RoleRepository(RoleRepositoryInterface):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+        self.session = session
 
     async def create_role(
         self,
-        name: RoleName,
-        description: str | None = None,
+        role: CreateRoleDTO,
     ) -> RoleDTO:
-        query = insert(Role).values(name=name, description=description).returning(Role)
+        query = (
+            insert(Role)
+            .values(name=role.name, description=role.description)
+            .returning(Role)
+        )
         result = await self.session.execute(query)
-        role = result.scalar_one()
-        return RoleDTO(id=role.id, name=role.name, description=role.description)
+        created = result.scalar_one()
+        return RoleDTO(
+            id=created.id,
+            name=created.name,
+            description=created.description,
+        )
 
     async def get_all_roles(self) -> list[RoleDTO]:
         query = select(Role)
+        result = await self.session.execute(query)
+        roles = result.scalars().all()
+        return [RoleDTO(id=r.id, name=r.name, description=r.description) for r in roles]
+
+    async def get_all_user_roles(self, user_id: UUID) -> list[RoleDTO]:
+        query = (
+            select(Role)
+            .join(user_roles, Role.id == user_roles.c.role_id)
+            .where(user_roles.c.user_id == user_id)
+        )
         result = await self.session.execute(query)
         roles = result.scalars().all()
         return [RoleDTO(id=r.id, name=r.name, description=r.description) for r in roles]

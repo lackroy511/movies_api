@@ -9,7 +9,7 @@ from src_auth.core.db.sql_alch import Base
 
 
 class RoleName(Enum):
-    ADMIN = "admin"
+    SUPERUSER = "superuser"
     SUBSCRIBER = "subscriber"
     REGULAR_USER = "regular_user"
 

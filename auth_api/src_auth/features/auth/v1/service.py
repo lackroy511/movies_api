@@ -57,23 +57,22 @@ class AuthService:
         password: str,
         response: Response,
     ) -> UserDTO:
-        async with self.auth_history_repo.session.begin():
-            user = await self.user_service.get_user_by_email(email)
-            if not verify_password(password, user.password_hash):
-                raise InvalidCredentialsError("Invalid credentials")
+        user = await self.user_service.get_user_by_email(email)
+        if not verify_password(password, user.password_hash):
+            raise InvalidCredentialsError("Invalid credentials")
 
-            user_agent = request.headers.get("user-agent", "Unknown user-agent")
-            await self.auth_history_repo.create_auth_entry(user.id, user_agent)
-            
-            # TODO: Получать роли пользователя
-            roles = ["regular_user"]
-            token_version = await self._get_token_version(user_id=user.id)
+        user_agent = request.headers.get("user-agent", "Unknown user-agent")
+        await self.auth_history_repo.create_auth_entry(user.id, user_agent)
+        
+        # TODO: Получать роли пользователя
+        roles = ["regular_user"]
+        token_version = await self._get_token_version(user_id=user.id)
 
-            access_token = create_token(user.id, roles, "access", token_version)
-            refresh_token = create_token(user.id, roles, "refresh", token_version)
-            set_token_cookie(response, access_token, refresh_token)
+        access_token = create_token(user.id, roles, "access", token_version)
+        refresh_token = create_token(user.id, roles, "refresh", token_version)
+        set_token_cookie(response, access_token, refresh_token)
 
-            return user
+        return user
 
     async def _get_token_version(self, user_id: UUID) -> int:
         ver = await self.version_repo.get_user_token_version(user_id)
