@@ -1,7 +1,8 @@
+import token
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Text, Uuid, func
+from sqlalchemy import DateTime, ForeignKey, Text, Uuid, func, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src_auth.core.db.sql_alch import Base
@@ -9,7 +10,7 @@ from src_auth.core.db.sql_alch import Base
 
 class AuthHistory(Base):
     __tablename__ = "auth_history"
-    
+
     user_id: Mapped[UUID] = mapped_column(
         Uuid,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -23,7 +24,19 @@ class AuthHistory(Base):
         index=True,
         server_default=func.now(),
     )
-    
+
     def __repr__(self) -> str:
         return f"<AuthHistory {self.user_id} {self.user_agent} {self.auth_at}>"
-    
+
+
+class TokenVersion(Base):
+    __tablename__ = "token_versions"
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+    )
+    version: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+    )

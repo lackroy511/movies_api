@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request
 
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
@@ -28,11 +28,15 @@ async def register(
 
 @router.post("/login")
 async def login(
+    request: Request,
     login_data: LoginRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     response: Response,
 ) -> UserResponse:
+    user_agent = request.headers.get("user-agent")
+    print(user_agent)
     logged_user = await auth_service.login_user(
+        request=request,
         email=login_data.email,
         password=login_data.password,
         response=response,

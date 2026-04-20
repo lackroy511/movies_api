@@ -20,9 +20,15 @@ class TokenData(BaseModel):
     iat: datetime
     exp: datetime
     type: TokenType
+    ver: int
 
 
-def create_token(user_id: UUID, user_roles: list[str], token_type: TokenType) -> str:
+def create_token(
+    user_id: UUID,
+    user_roles: list[str],
+    token_type: TokenType,
+    token_version: int,
+) -> str:
     if token_type == "access":
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.access_token_expire_minutes,
@@ -38,6 +44,7 @@ def create_token(user_id: UUID, user_roles: list[str], token_type: TokenType) ->
         iat=datetime.now(timezone.utc),
         exp=expire,
         type=token_type,
+        ver=token_version,
     )
     return jwt.encode(
         to_encode.model_dump(),
@@ -60,5 +67,5 @@ def verify_token(token: str, token_type: TokenType) -> TokenData | None:
             payload["exp"] = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
 
         return TokenData(**payload)
-    except (jwt.PyJWTError, ValueError):
+    except jwt.PyJWTError, ValueError:
         return None

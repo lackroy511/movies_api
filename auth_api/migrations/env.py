@@ -11,7 +11,7 @@ from src_auth.core.db.sql_alch import Base
 
 from src_auth.features.users.v1.models import User
 from src_auth.features.roles.v1.models import Role, user_roles
-from src_auth.features.auth.v1.models import AuthHistory
+from src_auth.features.auth.v1.models import AuthHistory, TokenVersion
 
 
 config = context.config

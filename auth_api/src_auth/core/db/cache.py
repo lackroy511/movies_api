@@ -15,20 +15,24 @@ client = aioredis.Redis(connection_pool=pool)
 
 class CacheClientInterface(ABC):
     @abstractmethod
-    async def set_cache(self, key: str, data: dict[str, Any], ttl: int) -> None: ...
-
-    @abstractmethod
-    async def get_cache(self, key: str) -> dict[str, Any] | None: ...
-
-    @abstractmethod
-    async def delete_cache(self, key: str) -> int: ...
-
-    @abstractmethod
-    def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
+    async def set_cache(self, key: str, data: dict[str, Any] | str, ttl: int) -> None:
         pass
 
     @abstractmethod
-    async def scan_keys(self, pattern: str) -> list[str]: ...
+    async def get_cache(self, key: str) -> dict[str, Any] | None:
+        pass
+
+    @abstractmethod
+    async def delete_cache(self, key: str) -> int:
+        pass
+    
+    @abstractmethod
+    async def scan_keys(self, pattern: str) -> list[str]:
+        pass
+    
+    @abstractmethod
+    def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
+        pass
 
 
 RETRY_EXCEPTIONS = (
@@ -37,25 +41,38 @@ RETRY_EXCEPTIONS = (
 )
 
 
+RedisDataType = dict[str, str | int | list[str] | None | bool] | str | int
+
+
 class RedisCacheClient(CacheClientInterface):
     def __init__(self, client: aioredis.Redis) -> None:
         self.client = client
 
     @Backoff(RETRY_EXCEPTIONS)
-    async def set_cache(self, key: str, data: dict[str, Any], ttl: int) -> None:
-        str_data = json.dumps(data)
-        is_saved = await self.client.set(key, str_data, ex=ttl)
+    async def set_cache(
+        self,
+        key: str,
+        data: RedisDataType,
+        ttl: int,
+    ) -> None:
+        if isinstance(data, dict):
+            data = json.dumps(data)
+
+        is_saved = await self.client.set(key, data, ex=ttl)
         if not is_saved:
-            raise SaveRedisCacheError("Failed to save movie to cache")
+            raise SaveRedisCacheError("Failed to save data to Redis cache.")
 
     @Backoff(RETRY_EXCEPTIONS)
-    async def get_cache(self, key: str) -> dict[str, Any] | None:
+    async def get_cache(self, key: str) -> RedisDataType | None:
         raw_data = await self.client.get(key)
         if not raw_data:
             return None
 
         json_str = raw_data.decode("utf-8")
-        return json.loads(json_str)
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            return json_str
 
     @Backoff(RETRY_EXCEPTIONS)
     async def delete_cache(self, key: str) -> int:
@@ -75,7 +92,7 @@ class RedisCacheClient(CacheClientInterface):
             if cursor == 0:
                 break
         return keys
-    
+
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
         key = ":".join(map(str, key_args))
         return f"{prefix}:{key}"
