@@ -1,33 +1,29 @@
 from enum import Enum as Enum
+from typing import Literal
 
-from sqlalchemy import Column
-from sqlalchemy import Enum as AlchEnum
-from sqlalchemy import ForeignKey, Table, Text
+from sqlalchemy import Column, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src_auth.core.db.sql_alch import Base
 
 
-class RoleName(Enum):
-    SUPERUSER = "superuser"
-    SUBSCRIBER = "subscriber"
-    REGULAR_USER = "regular_user"
-
-
 class Role(Base):
     __tablename__ = "roles"
 
-    name: Mapped[RoleName] = mapped_column(
-        AlchEnum(RoleName),
+    name: Mapped[str] = mapped_column(
+        String(50),
         unique=True,
     )
     description: Mapped[str] = mapped_column(
         Text,
         nullable=True,
     )
-    
+    is_system: Mapped[bool] = mapped_column(
+        default=False,
+    )
+
     def __repr__(self) -> str:
-        return f"<Role {self.name}>" 
+        return f"<Role {self.name}>"
 
 
 user_roles = Table(

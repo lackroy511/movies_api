@@ -8,13 +8,14 @@ from src_auth.core.security.cookies import set_token_cookie
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import create_token
 from src_auth.features.auth.v1.repository import (
+    AuthHistoryRepoInterface,
     TokenBlacklistRepoInterface,
     TokenVersionRepoInterface,
+    get_auth_history_repository,
     get_blacklist_token_repository,
     get_version_token_repository,
-    AuthHistoryRepoInterface,
-    get_auth_history_repository,
 )
+from src_auth.features.roles.v1.service import RoleService, get_role_service
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
 
@@ -26,12 +27,14 @@ class AuthService:
         version_repo: TokenVersionRepoInterface,
         auth_history_repo: AuthHistoryRepoInterface,
         user_service: UserService,
+        role_service: RoleService,
     ) -> None:
         self.blacklist_repo = blacklist_repo
         self.version_repo = version_repo
         self.auth_history_repo = auth_history_repo
 
         self.user_service = user_service
+        self.role_service = role_service
 
     async def register_user(
         self,
@@ -40,9 +43,6 @@ class AuthService:
         last_name: str | None,
         password: str,
     ) -> UserDTO:
-
-        # TODO: Назначить роль пользователю по умолчанию
-
         return await self.user_service.create_user(
             email=email,
             first_name=first_name,
@@ -63,10 +63,11 @@ class AuthService:
 
         user_agent = request.headers.get("user-agent", "Unknown user-agent")
         await self.auth_history_repo.create_auth_entry(user.id, user_agent)
-        
-        # TODO: Получать роли пользователя
-        roles = ["regular_user"]
+
         token_version = await self._get_token_version(user_id=user.id)
+
+        roles = await self.role_service.get_all_user_roles(user.id)
+        roles = [role.name for role in roles]
 
         access_token = create_token(user.id, roles, "access", token_version)
         refresh_token = create_token(user.id, roles, "refresh", token_version)
@@ -99,6 +100,10 @@ async def get_auth_service(
         UserService,
         Depends(get_user_service),
     ],
+    role_service: Annotated[
+        RoleService,
+        Depends(get_role_service),
+    ],
 ) -> AuthService:
 
     return AuthService(
@@ -106,4 +111,5 @@ async def get_auth_service(
         version_repo=version_repo,
         auth_history_repo=auth_history_repo,
         user_service=user_service,
+        role_service=role_service,
     )

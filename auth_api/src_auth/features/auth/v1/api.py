@@ -33,8 +33,6 @@ async def login(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     response: Response,
 ) -> UserResponse:
-    user_agent = request.headers.get("user-agent")
-    print(user_agent)
     logged_user = await auth_service.login_user(
         request=request,
         email=login_data.email,

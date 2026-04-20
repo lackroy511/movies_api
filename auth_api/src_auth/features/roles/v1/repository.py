@@ -7,8 +7,8 @@ from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.core.db.sql_alch import get_db_session
-from src_auth.features.roles.v1.dto import RoleDTO, CreateRoleDTO
-from src_auth.features.roles.v1.models import Role, RoleName, user_roles
+from src_auth.features.roles.v1.dto import CreateRoleDTO, RoleDTO
+from src_auth.features.roles.v1.models import Role, user_roles
 
 
 class RoleRepositoryInterface(ABC):
@@ -35,7 +35,7 @@ class RoleRepositoryInterface(ABC):
     async def update_role(
         self,
         role_id: UUID,
-        name: RoleName | None = None,
+        name: str | None = None,
         description: str | None = None,
     ) -> RoleDTO | None:
         pass
@@ -105,7 +105,7 @@ class RoleRepository(RoleRepositoryInterface):
     async def update_role(
         self,
         role_id: UUID,
-        name: RoleName | None = None,
+        name: str | None = None,
         description: str | None = None,
     ) -> RoleDTO | None:
         update_values = {}
@@ -119,7 +119,7 @@ class RoleRepository(RoleRepositoryInterface):
 
         query = (
             update(Role)
-            .where(Role.id == role_id)
+            .where(Role.id == role_id, Role.is_system._is(False))
             .values(**update_values)
             .returning(Role)
         )
@@ -130,7 +130,11 @@ class RoleRepository(RoleRepositoryInterface):
         return RoleDTO(id=role.id, name=role.name, description=role.description)
 
     async def delete_role(self, role_id: UUID) -> bool:
-        query = delete(Role).where(Role.id == role_id).returning(Role.id)
+        query = (
+            delete(Role)
+            .where(Role.id == role_id, Role.is_system._is(False))
+            .returning(Role.id)
+        )
         result = await self.session.execute(query)
         deleted_id = result.scalar_one_or_none()
         return deleted_id is not None
