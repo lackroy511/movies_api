@@ -33,6 +33,16 @@ class Settings(BaseSettings):
     @property
     def db_url(self) -> str:
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.db_host}:{self.db_port}/{self.postgres_db}"  # noqa: E501
+    
+    @computed_field
+    @property
+    def access_token_ttl(self) -> int:
+        return self.access_token_expire_minutes * 60
+    
+    @computed_field
+    @property
+    def refresh_token_ttl(self) -> int:
+        return self.refresh_token_expire_days * 24 * 60 * 60
 
 
 settings = Settings()  # ty: ignore

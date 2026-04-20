@@ -25,4 +25,5 @@ class AuthHistory(Base):
     )
     
     def __repr__(self) -> str:
-        return f"<AuthHistory {self.user_id} {self.user_agent} {self.auth_at}>" 
+        return f"<AuthHistory {self.user_id} {self.user_agent} {self.auth_at}>"
+    

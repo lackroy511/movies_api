@@ -9,7 +9,7 @@ def set_token_cookie(response: Response, access_token: str, refresh_token: str) 
         value=access_token,
         httponly=True,
         samesite="lax",
-        max_age=settings.access_token_expire_minutes * 60,
+        max_age=settings.access_token_ttl,
     )
 
     response.set_cookie(
@@ -17,7 +17,7 @@ def set_token_cookie(response: Response, access_token: str, refresh_token: str) 
         value=refresh_token,
         httponly=True,
         samesite="lax",
-        max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
+        max_age=settings.refresh_token_ttl,
     )
 
 

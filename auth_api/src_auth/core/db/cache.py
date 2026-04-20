@@ -23,9 +23,9 @@ class CacheClientInterface(ABC):
     @abstractmethod
     async def delete_cache(self, key: str) -> int: ...
 
+    @abstractmethod
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
-        key = ":".join(map(str, key_args))
-        return f"{prefix}:{key}"
+        pass
 
 
 RETRY_EXCEPTIONS = (
@@ -57,6 +57,10 @@ class RedisCacheClient(CacheClientInterface):
     @Backoff(RETRY_EXCEPTIONS)
     async def delete_cache(self, key: str) -> int:
         return await self.client.delete(key)
+    
+    def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
+        key = ":".join(map(str, key_args))
+        return f"{prefix}:{key}"
 
 
 def get_redis_client() -> CacheClientInterface:

@@ -6,7 +6,10 @@ from src_auth.core.exc.exceptions import InvalidCredentialsError
 from src_auth.core.security.cookies import set_token_cookie
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import create_token
-from src_auth.features.auth.v1.repository import AuthRepoInterface, get_auth_repository
+from src_auth.features.auth.v1.repository import (
+    AuthTokenRepoInterface,
+    get_auth_token_repository,
+)
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
 
@@ -14,10 +17,10 @@ from src_auth.features.users.v1.service import UserService, get_user_service
 class AuthService:
     def __init__(
         self,
-        auth_repo: AuthRepoInterface,
+        token_repo: AuthTokenRepoInterface,
         user_service: UserService,
     ) -> None:
-        self.auth_repo = auth_repo
+        self.token_repo = token_repo
         self.user_service = user_service
 
     async def register_user(
@@ -27,9 +30,9 @@ class AuthService:
         last_name: str | None,
         password: str,
     ) -> UserDTO:
-        
-        # TODO: Назначить роль пользователю по умолчанию 
-        
+
+        # TODO: Назначить роль пользователю по умолчанию
+
         return await self.user_service.create_user(
             email=email,
             first_name=first_name,
@@ -46,21 +49,21 @@ class AuthService:
         user = await self.user_service.get_user_by_email(email)
         if not verify_password(password, user.password_hash):
             raise InvalidCredentialsError("Invalid credentials")
-        
+
         # TODO: Получать роли пользователя
-        
+
         roles = ["regular_user"]
         access_token = create_token(user.id, roles, "access")
         refresh_token = create_token(user.id, roles, "refresh")
         set_token_cookie(response, access_token, refresh_token)
-        
+
         # TODO: Сохранять токены в Redis
-        
+
         return user
 
 
 async def get_auth_service(
-    auth_repo: Annotated[AuthRepoInterface, Depends(get_auth_repository)],
+    token_repo: Annotated[AuthTokenRepoInterface, Depends(get_auth_token_repository)],
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> AuthService:
-    return AuthService(auth_repo=auth_repo, user_service=user_service)
+    return AuthService(token_repo=token_repo, user_service=user_service)
