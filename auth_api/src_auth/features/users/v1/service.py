@@ -29,9 +29,8 @@ class UserService:
             last_name=last_name,
             password_hash=hash_password(password),
         )
-        created_user = await self.repository.create(to_create)
-        await self.repository.session.commit()
-        return created_user
+        async with self.repository.session.begin():
+            return await self.repository.create(to_create)
 
     async def get_user_by_email(self, email: str) -> UserDTO:
         user = await self.repository.get_by_email(email)

@@ -46,8 +46,10 @@ class UserRepo(UserRepoInterface):
         try:
             result = await self.session.execute(query)
         except IntegrityError as e:
-            if "unique constraint" in str(e).lower():
-                raise UserAlreadyExistsError("User already exists") from None
+            if getattr(e.orig, "pgcode", None) == "23505":
+                raise UserAlreadyExistsError() from None
+
+            raise
 
         created = result.scalar_one()
         return self._transform_to_dto(created)
@@ -55,7 +57,7 @@ class UserRepo(UserRepoInterface):
     async def get_by_email(self, email: str) -> UserDTO | None:
         query = select(User).where(
             User.email == email,
-            User.is_active == True,  # noqa: E712
+            User.is_active.is_(True),
         )
         result = await self.session.execute(query)
         user = result.scalar_one_or_none()
