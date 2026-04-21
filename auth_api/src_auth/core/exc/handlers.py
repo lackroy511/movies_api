@@ -7,6 +7,7 @@ from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     UserAlreadyExistsError,
     UserNotFoundError,
+    InvalidTokenOrExpiredTokenError,
 )
 
 log = logging.getLogger(__name__)
@@ -29,8 +30,13 @@ async def invalid_credentials_handler(request: Request, exc: Exception) -> JSONR
     return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
 
 
+async def invalid_token_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, unexpected_error_handler)
     app.add_exception_handler(UserAlreadyExistsError, user_already_exists_handler)
     app.add_exception_handler(UserNotFoundError, user_not_found_handler)
     app.add_exception_handler(InvalidCredentialsError, invalid_credentials_handler)
+    app.add_exception_handler(InvalidTokenOrExpiredTokenError, invalid_token_handler)

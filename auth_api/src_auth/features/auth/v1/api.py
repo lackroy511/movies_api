@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     RegisterRequest,
-    UserResponse,
+    UserResponse, StatusResponse,
 )
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
 
@@ -43,8 +43,13 @@ async def login(
 
 
 @router.post("/refresh")
-async def refresh() -> dict:
-    return {"message": "Refresh success"}
+async def refresh(
+    request: Request,
+    response: Response,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> StatusResponse:
+    await auth_service.refresh_tokens(request, response)
+    return StatusResponse()
 
 
 @router.post("/logout")

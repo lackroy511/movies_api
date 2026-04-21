@@ -48,9 +48,6 @@ class TokenBlacklistRepo(TokenBlacklistRepoInterface):
 
 
 class TokenVersionRepoInterface(ABC):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
     @abstractmethod
     async def create_user_token_version(self, user_id: UUID) -> TokenVersionDTO:
         pass
@@ -66,7 +63,7 @@ class TokenVersionRepoInterface(ABC):
 
 class TokenVersionRepo(TokenVersionRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+        self.session = session
 
     async def create_user_token_version(self, user_id: UUID) -> TokenVersionDTO:
         query = (
@@ -97,11 +94,8 @@ class TokenVersionRepo(TokenVersionRepoInterface):
 
 
 class AuthHistoryRepoInterface(ABC):
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
     @abstractmethod
-    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> AuthHistoryDTO:
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
         pass
 
     @abstractmethod
@@ -111,21 +105,14 @@ class AuthHistoryRepoInterface(ABC):
 
 class AuthHistoryRepo(AuthHistoryRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
+        self.session = session
 
-    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> AuthHistoryDTO:
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
         query = (
             insert(AuthHistory)
             .values(user_id=user_id, user_agent=user_agent)
-            .returning(AuthHistory)
         )
-        result = await self.session.execute(query)
-        created = result.scalar_one()
-        return AuthHistoryDTO(
-            user_id=created.user_id,
-            user_agent=created.user_agent,
-            auth_at=created.auth_at,
-        )
+        await self.session.execute(query)
 
     async def get_user_auth_history(
         self,

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from markdown_it.presets import default
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -31,6 +30,9 @@ class Settings(BaseSettings):
     secret_key: str
     
     default_user_roles: list[str] = ["superuser", "subscriber"]
+    
+    access_cookie_name: str = "access_token"
+    refresh_cookie_name: str = "refresh_token"
     
     @computed_field
     @property

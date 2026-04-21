@@ -22,5 +22,5 @@ def set_token_cookie(response: Response, access_token: str, refresh_token: str) 
 
 
 def clear_token_cookie(response: Response) -> None:
-    response.delete_cookie(key="access_token")
-    response.delete_cookie(key="refresh_token")
+    response.delete_cookie(key=settings.access_cookie_name)
+    response.delete_cookie(key=settings.refresh_cookie_name)

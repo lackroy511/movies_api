@@ -10,11 +10,7 @@ from src_auth.core.config.settings import settings
 TokenType = Literal["access", "refresh"]
 
 
-class IncorrectTokenTypeError(Exception):
-    pass
-
-
-class TokenData(BaseModel):
+class TokenPayload(BaseModel):
     user_id: str
     user_roles: list[str]
     iat: datetime
@@ -38,7 +34,7 @@ def create_token(
             days=settings.refresh_token_expire_days,
         )
 
-    to_encode = TokenData(
+    to_encode = TokenPayload(
         user_id=str(user_id),
         user_roles=user_roles,
         iat=datetime.now(timezone.utc),
@@ -53,19 +49,13 @@ def create_token(
     )
 
 
-def verify_token(token: str, token_type: TokenType) -> TokenData | None:
-    try:
-        payload = jwt.decode(
-            token,
-            settings.secret_key,
-            algorithms=["HS256"],
-        )
-        if payload.get("type") != token_type:
-            raise IncorrectTokenTypeError("Incorrect token type")
+def verify_token(token: str, token_type: TokenType) -> TokenPayload:
+    payload = jwt.decode(
+        token,
+        settings.secret_key,
+        algorithms=["HS256"],
+    )
+    if payload.get("type") != token_type:
+        raise ValueError("Invalid token type")
 
-        if "exp" in payload and isinstance(payload["exp"], int):
-            payload["exp"] = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-
-        return TokenData(**payload)
-    except jwt.PyJWTError, ValueError:
-        return None
+    return TokenPayload(**payload)

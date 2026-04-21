@@ -9,3 +9,7 @@ class UserNotFoundError(Exception):
 
 class InvalidCredentialsError(Exception):
     pass
+
+
+class InvalidTokenOrExpiredTokenError(Exception):
+    pass

@@ -1,3 +1,4 @@
+from typing import Literal
 from datetime import datetime
 from uuid import UUID
 
@@ -35,3 +36,7 @@ class UserResponse(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=4, max_length=100)
+
+
+class StatusResponse(BaseModel):
+    status: Literal["success", "error"] = "success"
