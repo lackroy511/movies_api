@@ -1,7 +1,7 @@
 import jwt
-from src_auth.core.exc.exceptions import InvalidTokenOrExpiredTokenError
 from fastapi import Request
 
+from src_auth.core.exc.exceptions import InvalidTokenOrExpiredTokenError
 from src_auth.core.security.jwt import TokenPayload, verify_token
 
 

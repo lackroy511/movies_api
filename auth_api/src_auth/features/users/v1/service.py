@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Annotated
 
 from fastapi import Depends
@@ -5,7 +6,7 @@ from fastapi import Depends
 from src_auth.core.exc.exceptions import UserNotFoundError
 from src_auth.core.security.hash_pass import hash_password
 from src_auth.features.shared.dto import UserDTO
-from src_auth.features.users.v1.dto import CreateUserDTO
+from src_auth.features.users.v1.dto import CreateUserDTO, UserAuthHistoryDTO
 from src_auth.features.users.v1.repository import (
     UserRepoInterface,
     get_user_repository,
@@ -37,6 +38,12 @@ class UserService:
             raise UserNotFoundError("User not found")
 
         return user
+
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
+        await self.repository.create_auth_entry(user_id, user_agent)
+    
+    async def get_auth_history(self, user_id: UUID) -> list[UserAuthHistoryDTO]:
+        return await self.repository.get_auth_history(user_id)
 
 
 async def get_user_service(

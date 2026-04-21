@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, Request, Response
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     RegisterRequest,
-    UserResponse, StatusResponse,
+    StatusResponse,
+    UserResponse,
 )
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
 

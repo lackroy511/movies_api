@@ -1,9 +1,10 @@
-import jwt
 from typing import Annotated
 from uuid import UUID
 
+import jwt
 from fastapi import Depends, Request, Response
 
+from src_auth.core.config.settings import settings
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
@@ -11,16 +12,14 @@ from src_auth.core.exc.exceptions import (
 from src_auth.core.security.cookies import set_token_cookie
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
-    create_token,
-    verify_token,
     TokenPayload,
     TokenType,
+    create_token,
+    verify_token,
 )
 from src_auth.features.auth.v1.repository import (
-    AuthHistoryRepoInterface,
     TokenBlacklistRepoInterface,
     TokenVersionRepoInterface,
-    get_auth_history_repository,
     get_blacklist_token_repository,
     get_version_token_repository,
 )
@@ -28,21 +27,17 @@ from src_auth.features.roles.v1.service import RoleService, get_role_service
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
 
-from src_auth.core.config.settings import settings
-
 
 class AuthService:
     def __init__(
         self,
         blacklist_repo: TokenBlacklistRepoInterface,
         version_repo: TokenVersionRepoInterface,
-        auth_history_repo: AuthHistoryRepoInterface,
         user_service: UserService,
         role_service: RoleService,
     ) -> None:
         self.blacklist_repo = blacklist_repo
         self.version_repo = version_repo
-        self.auth_history_repo = auth_history_repo
 
         self.user_service = user_service
         self.role_service = role_service
@@ -73,7 +68,7 @@ class AuthService:
             raise InvalidCredentialsError("Invalid credentials")
 
         user_agent = request.headers.get("user-agent", "Unknown user-agent")
-        await self.auth_history_repo.create_auth_entry(user.id, user_agent)
+        await self.user_service.create_auth_entry(user.id, user_agent)
 
         token_version = await self._get_or_create_token_version(user_id=user.id)
         roles = await self._get_user_roles(user.id)
@@ -174,10 +169,6 @@ async def get_auth_service(
         TokenVersionRepoInterface,
         Depends(get_version_token_repository),
     ],
-    auth_history_repo: Annotated[
-        AuthHistoryRepoInterface,
-        Depends(get_auth_history_repository),
-    ],
     user_service: Annotated[
         UserService,
         Depends(get_user_service),
@@ -190,7 +181,6 @@ async def get_auth_service(
     return AuthService(
         blacklist_repo=blacklist_repo,
         version_repo=version_repo,
-        auth_history_repo=auth_history_repo,
         user_service=user_service,
         role_service=role_service,
     )

@@ -1,3 +1,4 @@
+from uuid import UUID
 from abc import ABC, abstractmethod
 from typing import Annotated
 
@@ -9,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src_auth.core.db.sql_alch import get_db_session
 from src_auth.core.exc.exceptions import UserAlreadyExistsError
 from src_auth.features.shared.dto import UserDTO
-from src_auth.features.users.v1.dto import CreateUserDTO
-from src_auth.features.users.v1.models import User
+from src_auth.features.users.v1.dto import CreateUserDTO, UserAuthHistoryDTO
+from src_auth.features.users.v1.models import User, UserAuthHistory
 
 
 class UserRepoInterface(ABC):
@@ -20,6 +21,18 @@ class UserRepoInterface(ABC):
 
     @abstractmethod
     async def get_by_email(self, email: str) -> UserDTO | None:
+        pass
+
+    @abstractmethod
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
+        pass
+
+    @abstractmethod
+    async def get_auth_history(
+        self,
+        user_id: UUID,
+        limit: int = 10,
+    ) -> list[UserAuthHistoryDTO]:
         pass
 
 
@@ -49,7 +62,7 @@ class UserRepo(UserRepoInterface):
             raise
 
         created = result.scalar_one()
-        return self._transform_to_dto(created)
+        return self._transform_user_to_dto(created)
 
     async def get_by_email(self, email: str) -> UserDTO | None:
         query = select(User).where(
@@ -61,9 +74,35 @@ class UserRepo(UserRepoInterface):
         if user is None:
             return None
 
-        return self._transform_to_dto(user)
+        return self._transform_user_to_dto(user)
 
-    def _transform_to_dto(self, user: User) -> UserDTO:
+    async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
+        query = insert(UserAuthHistory).values(user_id=user_id, user_agent=user_agent)
+        await self.session.execute(query)
+
+    async def get_auth_history(
+        self,
+        user_id: UUID,
+        limit: int = 10,
+    ) -> list[UserAuthHistoryDTO]:
+        query = (
+            select(UserAuthHistory)
+            .where(UserAuthHistory.user_id == user_id)
+            .order_by(UserAuthHistory.auth_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        history = result.scalars().all()
+        return [
+            UserAuthHistoryDTO(
+                user_id=h.user_id,
+                user_agent=h.user_agent,
+                auth_at=h.auth_at,
+            )
+            for h in history
+        ]
+
+    def _transform_user_to_dto(self, user: User) -> UserDTO:
         return UserDTO(
             id=user.id,
             email=user.email,

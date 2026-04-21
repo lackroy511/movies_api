@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
+    InvalidTokenOrExpiredTokenError,
     UserAlreadyExistsError,
     UserNotFoundError,
-    InvalidTokenOrExpiredTokenError,
 )
 
 log = logging.getLogger(__name__)

@@ -9,9 +9,9 @@ from alembic import context
 from src_auth.core.config.settings import settings
 from src_auth.core.db.sql_alch import Base
 
-from src_auth.features.users.v1.models import User
+from src_auth.features.users.v1.models import User, UserAuthHistory
 from src_auth.features.roles.v1.models import Role, user_roles
-from src_auth.features.auth.v1.models import AuthHistory, TokenVersion
+from src_auth.features.auth.v1.models import TokenVersion
 
 
 config = context.config
