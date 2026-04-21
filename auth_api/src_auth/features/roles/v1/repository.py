@@ -4,9 +4,15 @@ from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy import delete, insert, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.core.db.sql_alch import get_db_session
+from src_auth.core.exc.exceptions import (
+    RoleAlreadyAssignedError,
+    RoleAlreadyExistsError,
+    UserOrRoleNotFoundError,
+)
 from src_auth.features.roles.v1.dto import CreateRoleDTO, RoleDTO
 from src_auth.features.roles.v1.models import Role, user_roles
 
@@ -53,7 +59,7 @@ class RoleRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def revoke_user_from_role(self, user_id: UUID, role_id: UUID) -> None:
+    async def revoke_user_from_role(self, user_id: UUID, role_id: UUID) -> bool:
         pass
 
 
@@ -70,7 +76,13 @@ class RoleRepository(RoleRepositoryInterface):
             .values(name=role.name, description=role.description)
             .returning(Role)
         )
-        result = await self.session.execute(query)
+        try:
+            result = await self.session.execute(query)
+        except IntegrityError as e:
+            if getattr(e.orig, "pgcode", None) == "23505":
+                raise RoleAlreadyExistsError("Role already exists") from None
+            raise
+        
         created = result.scalar_one()
         return RoleDTO(
             id=created.id,
@@ -119,7 +131,7 @@ class RoleRepository(RoleRepositoryInterface):
 
         query = (
             update(Role)
-            .where(Role.id == role_id, Role.is_system._is(False))
+            .where(Role.id == role_id, Role.is_system.is_(False))
             .values(**update_values)
             .returning(Role)
         )
@@ -127,12 +139,13 @@ class RoleRepository(RoleRepositoryInterface):
         role = result.scalar_one_or_none()
         if not role:
             return None
+
         return RoleDTO(id=role.id, name=role.name, description=role.description)
 
     async def delete_role(self, role_id: UUID) -> bool:
         query = (
             delete(Role)
-            .where(Role.id == role_id, Role.is_system._is(False))
+            .where(Role.id == role_id, Role.is_system.is_(False))
             .returning(Role.id)
         )
         result = await self.session.execute(query)
@@ -141,7 +154,19 @@ class RoleRepository(RoleRepositoryInterface):
 
     async def assign_user_to_role(self, user_id: UUID, role_id: UUID) -> None:
         query = insert(user_roles).values(user_id=user_id, role_id=role_id)
-        await self.session.execute(query)
+
+        try:
+            await self.session.execute(query)
+        except IntegrityError as e:
+            orig = getattr(e, "orig", None)
+            if not orig or not hasattr(orig, "pgcode"):
+                raise
+
+            if orig.pgcode == "23503":
+                raise UserOrRoleNotFoundError("User or role does not exist") from None
+
+            if orig.pgcode == "23505":
+                raise RoleAlreadyAssignedError("User already has this role") from None
 
     async def is_user_assigned_to_role(self, user_id: UUID, role_id: UUID) -> bool:
         query = select(user_roles).where(
@@ -151,12 +176,17 @@ class RoleRepository(RoleRepositoryInterface):
         result = await self.session.execute(query)
         return result.scalar_one_or_none() is not None
 
-    async def revoke_user_from_role(self, user_id: UUID, role_id: UUID) -> None:
-        query = delete(user_roles).where(
-            user_roles.c.user_id == user_id,
-            user_roles.c.role_id == role_id,
+    async def revoke_user_from_role(self, user_id: UUID, role_id: UUID) -> bool:
+        query = (
+            delete(user_roles)
+            .where(
+                user_roles.c.user_id == user_id,
+                user_roles.c.role_id == role_id,
+            )
+            .returning(user_roles.c.user_id)
         )
-        await self.session.execute(query)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none() is not None
 
 
 async def get_role_repository(

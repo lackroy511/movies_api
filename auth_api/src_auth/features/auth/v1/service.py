@@ -9,7 +9,7 @@ from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
 )
-from src_auth.core.security.cookies import set_token_cookie
+from src_auth.core.security.cookies import clear_token_cookie, set_token_cookie
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
     TokenPayload,
@@ -94,7 +94,7 @@ class AuthService:
         actual_ver = await self._get_or_create_token_version(user_uuid)
         roles = await self._get_user_roles(user_uuid)
 
-        await self._check_token_version(payload, actual_ver)
+        await self._check_token_version(payload.ver, actual_ver)
         await self._is_token_blacklisted(refresh, payload.user_id)
         await self._blacklist_old_tokens(payload.user_id, access, refresh)
 
@@ -104,6 +104,48 @@ class AuthService:
             actual_ver,
         )
         set_token_cookie(response, new_access, new_refresh)
+
+    async def logout_user(
+        self,
+        request: Request,
+        response: Response,
+    ) -> None:
+        access = request.cookies.get(settings.access_cookie_name)
+        refresh = request.cookies.get(settings.refresh_cookie_name, "wrong token")
+        try:
+            payload = await self._get_token_payload(access, "access")  # ty: ignore
+        except InvalidTokenOrExpiredTokenError:
+            payload = await self._get_token_payload(refresh, "refresh")
+        finally:
+            clear_token_cookie(response)
+
+        user_uuid = UUID(payload.user_id)
+        actual_ver = await self._get_or_create_token_version(user_uuid)
+
+        await self._check_token_version(payload.ver, actual_ver)
+        await self._is_token_blacklisted(access or refresh, payload.user_id)
+        await self._blacklist_old_tokens(payload.user_id, access, refresh)
+
+    async def logout_all_user_sessions(
+        self,
+        request: Request,
+        response: Response,
+    ) -> None:
+        access = request.cookies.get(settings.access_cookie_name)
+        refresh = request.cookies.get(settings.refresh_cookie_name, "wrong token")
+        try:
+            payload = await self._get_token_payload(access, "access")  # ty: ignore
+        except InvalidTokenOrExpiredTokenError:
+            payload = await self._get_token_payload(refresh, "refresh")
+        finally:
+            clear_token_cookie(response)
+
+        user_uuid = UUID(payload.user_id)
+        actual_ver = await self._get_or_create_token_version(user_uuid)
+        
+        await self._check_token_version(payload.ver, actual_ver)
+        await self._is_token_blacklisted(access or refresh, payload.user_id)
+        await self.version_repo.increment_user_token_version(user_uuid)
 
     async def _get_token_payload(
         self,
@@ -144,8 +186,8 @@ class AuthService:
         refresh_token = create_token(user_uuid, roles, "refresh", token_ver)
         return access_token, refresh_token
 
-    async def _check_token_version(self, payload: TokenPayload, version: int) -> None:
-        if payload.ver != version:
+    async def _check_token_version(self, payload_ver: int, version: int) -> None:
+        if payload_ver != version:
             raise InvalidTokenOrExpiredTokenError("Invalid token version")
 
     async def _get_or_create_token_version(self, user_id: UUID) -> int:

@@ -1,5 +1,5 @@
-from uuid import UUID
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends
 
@@ -32,6 +32,13 @@ class UserService:
         )
         return await self.repository.create(to_create)
 
+    async def get_user_by_id(self, user_id: UUID) -> UserDTO:
+        user = await self.repository.get_by_id(user_id)
+        if not user:
+            raise UserNotFoundError("User not found")
+        
+        return user
+    
     async def get_user_by_email(self, email: str) -> UserDTO:
         user = await self.repository.get_by_email(email)
         if not user:
@@ -44,6 +51,13 @@ class UserService:
     
     async def get_auth_history(self, user_id: UUID) -> list[UserAuthHistoryDTO]:
         return await self.repository.get_auth_history(user_id)
+
+    async def change_email(self, user_id: UUID, new_email: str) -> None:
+        await self.repository.update_email(user_id, new_email)
+
+    async def change_password(self, user_id: UUID, new_password: str) -> None:
+        hashed_password = hash_password(new_password)
+        await self.repository.update_password(user_id, hashed_password)
 
 
 async def get_user_service(

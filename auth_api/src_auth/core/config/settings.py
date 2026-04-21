@@ -1,9 +1,12 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent.parent.parent
+
+RolesType = Literal["superuser", "subscriber"]
 
 
 class Settings(BaseSettings):
@@ -29,7 +32,8 @@ class Settings(BaseSettings):
     
     secret_key: str
     
-    default_user_roles: list[str] = ["superuser", "subscriber"]
+    default_user_roles: list[RolesType] = ["superuser", "subscriber"]
+    admin_role: RolesType = "superuser"
     
     access_cookie_name: str = "access_token"
     refresh_cookie_name: str = "refresh_token"

@@ -1,8 +1,4 @@
-from datetime import datetime
-from typing import Literal
-from uuid import UUID
-
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -20,23 +16,6 @@ class RegisterRequest(BaseModel):
         return self
 
 
-class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True) 
-    
-    id: UUID
-    email: str
-    first_name: str
-    last_name: str | None
-    is_active: bool
-    is_superuser: bool
-    created_at: datetime
-    updated_at: datetime
-
-
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=4, max_length=100)
-
-
-class StatusResponse(BaseModel):
-    status: Literal["success", "error"] = "success"

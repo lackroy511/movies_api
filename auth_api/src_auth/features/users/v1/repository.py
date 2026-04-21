@@ -1,9 +1,9 @@
-from uuid import UUID
 from abc import ABC, abstractmethod
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,10 @@ class UserRepoInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_by_id(self, id: UUID) -> UserDTO | None:
+        pass
+
+    @abstractmethod
     async def get_by_email(self, email: str) -> UserDTO | None:
         pass
 
@@ -33,6 +37,14 @@ class UserRepoInterface(ABC):
         user_id: UUID,
         limit: int = 10,
     ) -> list[UserAuthHistoryDTO]:
+        pass
+
+    @abstractmethod
+    async def update_email(self, user_id: UUID, new_email: str) -> None:
+        pass
+
+    @abstractmethod
+    async def update_password(self, user_id: UUID, new_password_hash: str) -> None:
         pass
 
 
@@ -63,6 +75,15 @@ class UserRepo(UserRepoInterface):
 
         created = result.scalar_one()
         return self._transform_user_to_dto(created)
+
+    async def get_by_id(self, id: UUID) -> UserDTO | None:
+        query = select(User).where(User.id == id)
+        result = await self.session.execute(query)
+        user = result.scalar_one_or_none()
+        if user is None:
+            return None
+
+        return self._transform_user_to_dto(user)
 
     async def get_by_email(self, email: str) -> UserDTO | None:
         query = select(User).where(
@@ -101,6 +122,27 @@ class UserRepo(UserRepoInterface):
             )
             for h in history
         ]
+
+    async def update_email(self, user_id: UUID, new_email: str) -> None:
+        query = (
+            update(User)
+            .where(User.id == user_id)
+            .values(email=new_email)
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as e:
+            if getattr(e.orig, "pgcode", None) == "23505":
+                raise UserAlreadyExistsError() from None
+            raise
+
+    async def update_password(self, user_id: UUID, new_password_hash: str) -> None:
+        query = (
+            update(User)
+            .where(User.id == user_id)
+            .values(password_hash=new_password_hash)
+        )
+        await self.session.execute(query)
 
     def _transform_user_to_dto(self, user: User) -> UserDTO:
         return UserDTO(

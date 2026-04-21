@@ -5,10 +5,9 @@ from fastapi import APIRouter, Depends, Request, Response
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     RegisterRequest,
-    StatusResponse,
-    UserResponse,
 )
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
+from src_auth.features.shared.schemas import StatusResponse, UserResponse
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
 
@@ -54,10 +53,20 @@ async def refresh(
 
 
 @router.post("/logout")
-async def logout() -> dict:
-    return {"message": "Logout success"}
+async def logout(
+    request: Request,
+    response: Response,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> StatusResponse:
+    await auth_service.logout_user(request, response)
+    return StatusResponse()
 
 
 @router.post("/logout-all")
-async def logout_all() -> dict:
-    return {"message": "Logout all success"}
+async def logout_all(
+    request: Request,
+    response: Response,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> StatusResponse:
+    await auth_service.logout_all_user_sessions(request, response)
+    return StatusResponse()

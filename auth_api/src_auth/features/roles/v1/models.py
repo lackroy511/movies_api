@@ -1,5 +1,4 @@
 from enum import Enum as Enum
-from typing import Literal
 
 from sqlalchemy import Column, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column
