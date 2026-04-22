@@ -11,6 +11,5 @@ class UserDTO:
     last_name: str | None
     password_hash: str
     is_active: bool
-    is_superuser: bool
     created_at: datetime
     updated_at: datetime

@@ -1,31 +1,39 @@
 
-class UserAlreadyExistsError(Exception):
+class BaseAuthServiceError(Exception):
     pass
 
 
-class UserNotFoundError(Exception):
+class UserAlreadyExistsError(BaseAuthServiceError):
     pass
 
 
-class InvalidCredentialsError(Exception):
+class UserNotFoundError(BaseAuthServiceError):
     pass
 
 
-class InvalidTokenOrExpiredTokenError(Exception):
+class InvalidCredentialsError(BaseAuthServiceError):
     pass
 
 
-class RoleNotFoundError(Exception):
+class InvalidTokenOrExpiredTokenError(BaseAuthServiceError):
     pass
 
 
-class UserOrRoleNotFoundError(Exception):
+class RoleNotFoundError(BaseAuthServiceError):
     pass
 
 
-class RoleAlreadyAssignedError(Exception):
+class UserOrRoleNotFoundError(BaseAuthServiceError):
     pass
 
 
-class RoleAlreadyExistsError(Exception):
+class RoleAlreadyAssignedError(BaseAuthServiceError):
+    pass
+
+
+class RoleAlreadyExistsError(BaseAuthServiceError):
+    pass
+
+
+class AccessDeniedError(BaseAuthServiceError): 
     pass

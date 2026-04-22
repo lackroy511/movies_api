@@ -29,10 +29,6 @@ class User(Base):
         Boolean,
         server_default="false",
     )
-    is_superuser: Mapped[bool] = mapped_column(
-        Boolean,
-        server_default="false",
-    )
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

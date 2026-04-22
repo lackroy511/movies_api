@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
+from src_auth.core.config.settings import settings
 from src_auth.core.security.jwt import TokenPayload
 from src_auth.features.roles.v1.schemas import (
     CerateRoleRequest,
@@ -11,10 +12,14 @@ from src_auth.features.roles.v1.schemas import (
     UpdateRoleRequest,
 )
 from src_auth.features.roles.v1.service import RoleService, get_role_service
-from src_auth.features.shared.dependencies import get_current_user_payload
+from src_auth.features.shared.dependencies import RequireRole, get_current_user_payload
 from src_auth.features.shared.schemas import StatusResponse
 
-router = APIRouter(prefix="/v1", tags=["Roles V1"])
+router = APIRouter(
+    prefix="/v1",
+    tags=["Roles V1"],
+    dependencies=[Depends(RequireRole(allowed_roles=[settings.admin_role]))],
+)
 
 
 @router.post("/roles")

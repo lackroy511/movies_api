@@ -61,7 +61,6 @@ class UserRepo(UserRepoInterface):
                 last_name=user.last_name,
                 password_hash=user.password_hash,
                 is_active=user.is_active,
-                is_superuser=user.is_superuser,
             )
             .returning(User)
         )
@@ -152,7 +151,6 @@ class UserRepo(UserRepoInterface):
             last_name=user.last_name,
             password_hash=user.password_hash,
             is_active=user.is_active,
-            is_superuser=user.is_superuser,
             created_at=user.created_at,
             updated_at=user.updated_at,
         )
