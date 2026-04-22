@@ -7,12 +7,15 @@ from src_auth.features.auth.v1.schemas import (
     RegisterRequest,
 )
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
-from src_auth.features.shared.schemas import StatusResponse, UserResponse
+from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
 
 
-@router.post("/register")
+@router.post(
+    "/register",
+    responses={409: {"model": ErrorResponse}},
+)
 async def register(
     user_data: RegisterRequest,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
@@ -26,7 +29,10 @@ async def register(
     return UserResponse.model_validate(new_user)
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+)
 async def login(
     request: Request,
     login_data: LoginRequest,
@@ -42,7 +48,10 @@ async def login(
     return UserResponse.model_validate(logged_user)
 
 
-@router.post("/refresh")
+@router.post(
+    "/refresh",
+    responses={401: {"model": ErrorResponse}},
+)
 async def refresh(
     request: Request,
     response: Response,
@@ -52,7 +61,10 @@ async def refresh(
     return StatusResponse()
 
 
-@router.post("/logout")
+@router.post(
+    "/logout",
+    responses={401: {"model": ErrorResponse}},
+)
 async def logout(
     request: Request,
     response: Response,
@@ -62,7 +74,10 @@ async def logout(
     return StatusResponse()
 
 
-@router.post("/logout-all")
+@router.post(
+    "/logout-all",
+    responses={401: {"model": ErrorResponse}},
+)
 async def logout_all(
     request: Request,
     response: Response,

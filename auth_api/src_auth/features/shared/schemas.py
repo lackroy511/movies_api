@@ -19,3 +19,7 @@ class UserResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     status: Literal["success", "error"] = "success"
+
+
+class ErrorResponse(BaseModel):
+    detail: str

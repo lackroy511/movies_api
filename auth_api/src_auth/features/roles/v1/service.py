@@ -3,7 +3,11 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from src_auth.core.exc.exceptions import RoleNotFoundError, UserOrRoleNotFoundError, AccessDeniedError
+from src_auth.core.exc.exceptions import (
+    RoleNotFoundError,
+    UserOrRoleNotFoundError,
+    AccessDeniedError,
+)
 from src_auth.features.roles.v1.dto import CreateRoleDTO, RoleDTO
 from src_auth.features.roles.v1.repository import (
     RoleRepositoryInterface,
@@ -45,7 +49,7 @@ class RoleService:
     ) -> RoleDTO:
         if await self.repository.is_system_role(role_id=role_id):
             raise AccessDeniedError("Cannot update a system role")
-        
+
         updated = await self.repository.update_role(
             role_id=role_id,
             name=name,
@@ -62,7 +66,7 @@ class RoleService:
     ) -> bool:
         if await self.repository.is_system_role(role_id=role_id):
             raise AccessDeniedError("Cannot delete system role")
-        
+
         is_deleted = await self.repository.delete_role(role_id=role_id)
         if not is_deleted:
             raise RoleNotFoundError("Role not found")
