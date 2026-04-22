@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from src_auth.core.security.jwt import TokenPayload
 from src_auth.features.shared.dependencies import get_current_user_payload
-from src_auth.features.shared.schemas import StatusResponse, UserResponse
+from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 from src_auth.features.users.v1.schemas import (
     ChangeEmailRequest,
     ChangePasswordRequest,
@@ -16,7 +16,10 @@ from src_auth.features.users.v1.service import UserService, get_user_service
 router = APIRouter(prefix="/v1", tags=["Users V1"])
 
 
-@router.get("/users/me")
+@router.get(
+    "/users/me",
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+)
 async def get_current_user(
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
     user_service: Annotated[UserService, Depends(get_user_service)],
@@ -25,7 +28,10 @@ async def get_current_user(
     return UserResponse.model_validate(user)
 
 
-@router.patch("/users/me/change-email")
+@router.patch(
+    "/users/me/change-email",
+    responses={401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+)
 async def change_email(
     request: ChangeEmailRequest,
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
@@ -35,7 +41,10 @@ async def change_email(
     return StatusResponse(status="success")
 
 
-@router.patch("/users/me/change-password")
+@router.patch(
+    "/users/me/change-password",
+    responses={401: {"model": ErrorResponse}},
+)
 async def change_password(
     request: ChangePasswordRequest,
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
@@ -48,7 +57,10 @@ async def change_password(
     return StatusResponse(status="success")
 
 
-@router.get("/users/me/auth-history")
+@router.get(
+    "/users/me/auth-history",
+    responses={401: {"model": ErrorResponse}},
+)
 async def get_auth_history(
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
     user_service: Annotated[UserService, Depends(get_user_service)],
