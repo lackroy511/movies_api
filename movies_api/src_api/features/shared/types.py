@@ -1,6 +1,11 @@
 from typing import Literal, Protocol
 
-SortMoviesType = Literal["imdb_rating", "-imdb_rating"]
+SortMoviesType = Literal[
+    "imdb_rating",
+    "-imdb_rating",
+    "creation_date",
+    "-creation_date",
+]
 
 
 class DataclassType(Protocol):
