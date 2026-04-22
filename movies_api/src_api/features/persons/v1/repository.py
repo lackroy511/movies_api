@@ -159,6 +159,8 @@ class PersonsElasticRepo(PersonsRepoInterface):
             items=[
                 PersonMovieDTO(
                     id=movie["_source"]["id"],
+                    creation_date=movie["_source"]["creation_date"],
+                    file_path=movie["_source"]["file_path"],
                     title=movie["_source"]["title"],
                     imdb_rating=movie["_source"]["imdb_rating"],
                     roles=[

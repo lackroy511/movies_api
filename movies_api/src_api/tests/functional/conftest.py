@@ -121,6 +121,8 @@ def create_movies_es_data(test_genre_names: list[str]) -> CreateMoviesDataType:
 
             movie = {
                 "id": str(uuid.uuid4()),
+                "creation_date": fake.date(),
+                "file_path": fake.url() + ".mp4",
                 "title": fake.catch_phrase(),
                 "description": fake.paragraph(nb_sentences=3),
                 "imdb_rating": round(random.uniform(1.0, 10.0), 1),
