@@ -1,19 +1,12 @@
+from src_auth.features.auth.v1.service import SessionService, get_session_service
 from typing import Annotated
-from uuid import UUID
-
-import jwt
 from fastapi import Depends, Request
 
 from src_auth.core.config.settings import RolesType
 from src_auth.core.exc.exceptions import (
     AccessDeniedError,
-    InvalidTokenOrExpiredTokenError,
 )
-from src_auth.core.security.jwt import TokenPayload, verify_token
-from src_auth.features.auth.v1.repository import (
-    TokenVersionRepoInterface,
-    get_version_token_repository,
-)
+from src_auth.core.security.jwt import TokenPayload
 
 
 class RequireRole:
@@ -33,24 +26,12 @@ class RequireRole:
 
 async def get_current_user_payload(
     request: Request,
-    version_repo: Annotated[
-        TokenVersionRepoInterface,
-        Depends(get_version_token_repository),
+    session_service: Annotated[
+        SessionService,
+        Depends(get_session_service),
     ],
 ) -> TokenPayload:
-    access_token = request.cookies.get("access_token")
-    if not access_token:
-        raise InvalidTokenOrExpiredTokenError("Token not found in cookies")
-
-    try:
-        payload = verify_token(access_token, "access")
-    except jwt.PyJWTError, ValueError:
-        raise InvalidTokenOrExpiredTokenError(
-            "Invalid token or expired token",
-        ) from None
-
-    actual_ver = await version_repo.get_user_token_version(UUID(payload.user_id))
-    if not actual_ver or payload.ver != actual_ver.version:
-        raise InvalidTokenOrExpiredTokenError("Invalid token version")
-
+    access_token = request.cookies.get("access_token", "wrong token")
+    payload = session_service.decode_token(access_token, "access")
+    await session_service.verify_session(payload, access_token)
     return payload

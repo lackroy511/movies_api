@@ -24,5 +24,7 @@ class Settings(BaseSettings):
 
     secret_key: str
     
+    subscriber_role: str = "subscriber"
+    
 
 settings = Settings()  # ty: ignore

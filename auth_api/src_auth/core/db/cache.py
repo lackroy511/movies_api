@@ -13,23 +13,22 @@ pool = aioredis.ConnectionPool.from_url(settings.redis_base_url, max_connections
 client = aioredis.Redis(connection_pool=pool)
 
 
+CacheDataType = dict[str, str | int | list[str] | None | bool] | str | int
+
+
 class CacheClientInterface(ABC):
     @abstractmethod
-    async def set_cache(self, key: str, data: dict[str, Any] | str, ttl: int) -> None:
+    async def set_cache(self, key: str, data: CacheDataType, ttl: int) -> None:
         pass
 
     @abstractmethod
-    async def get_cache(self, key: str) -> dict[str, Any] | None:
+    async def get_cache(self, key: str) -> CacheDataType | None:
         pass
 
     @abstractmethod
     async def delete_cache(self, key: str) -> int:
         pass
-    
-    @abstractmethod
-    async def scan_keys(self, pattern: str) -> list[str]:
-        pass
-    
+
     @abstractmethod
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
         pass
@@ -41,9 +40,6 @@ RETRY_EXCEPTIONS = (
 )
 
 
-RedisDataType = dict[str, str | int | list[str] | None | bool] | str | int
-
-
 class RedisCacheClient(CacheClientInterface):
     def __init__(self, client: aioredis.Redis) -> None:
         self.client = client
@@ -52,7 +48,7 @@ class RedisCacheClient(CacheClientInterface):
     async def set_cache(
         self,
         key: str,
-        data: RedisDataType,
+        data: CacheDataType,
         ttl: int,
     ) -> None:
         if isinstance(data, dict):
@@ -63,7 +59,7 @@ class RedisCacheClient(CacheClientInterface):
             raise SaveRedisCacheError("Failed to save data to Redis cache.")
 
     @Backoff(RETRY_EXCEPTIONS)
-    async def get_cache(self, key: str) -> RedisDataType | None:
+    async def get_cache(self, key: str) -> CacheDataType | None:
         raw_data = await self.client.get(key)
         if not raw_data:
             return None
@@ -77,21 +73,6 @@ class RedisCacheClient(CacheClientInterface):
     @Backoff(RETRY_EXCEPTIONS)
     async def delete_cache(self, key: str) -> int:
         return await self.client.delete(key)
-
-    @Backoff(RETRY_EXCEPTIONS)
-    async def scan_keys(self, pattern: str) -> list[str]:
-        keys = []
-        cursor = 0
-        while True:
-            cursor, keys_batch = await self.client.scan(
-                cursor=cursor,
-                match=pattern,
-                count=100,
-            )
-            keys.extend(keys_batch)
-            if cursor == 0:
-                break
-        return keys
 
     def build_cache_key(self, prefix: str, *key_args: Any) -> str:  # noqa: ANN401
         key = ":".join(map(str, key_args))

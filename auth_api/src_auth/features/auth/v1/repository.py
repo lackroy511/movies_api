@@ -76,13 +76,13 @@ class TokenVersionRepo(TokenVersionRepoInterface):
         return TokenVersionDTO(user_id=created.user_id, version=created.version)
 
     async def get_user_token_version(self, user_id: UUID) -> TokenVersionDTO | None:
-        query = select(TokenVersion).where(TokenVersion.user_id == user_id)
+        query = select(TokenVersion.version).where(TokenVersion.user_id == user_id)
         result = await self.session.execute(query)
         token_ver = result.scalar_one_or_none()
         if token_ver is None:
             return None
 
-        return TokenVersionDTO(user_id=token_ver.user_id, version=token_ver.version)
+        return TokenVersionDTO(user_id=user_id, version=token_ver)
 
     async def increment_user_token_version(self, user_id: UUID) -> None:
         query = (
