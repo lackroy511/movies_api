@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     default_user_roles: list[RolesType] = ["admin", "subscriber"]
     admin_role: RolesType = "admin"
     
+    admin_email: str
+    admin_password: str
+    
     access_cookie_name: str = "access_token"
     refresh_cookie_name: str = "refresh_token"
     

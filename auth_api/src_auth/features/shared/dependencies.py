@@ -24,7 +24,7 @@ class RequireRole:
         self,
         token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
     ) -> None:
-        user_roles = getattr(token_payload, "roles", [])
+        user_roles = getattr(token_payload, "user_roles", [])
 
         has_access = bool(set(user_roles) & set(self.allowed_roles))
         if not has_access:
