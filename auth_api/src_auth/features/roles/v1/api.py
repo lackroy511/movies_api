@@ -13,7 +13,7 @@ from src_auth.features.roles.v1.schemas import (
 )
 from src_auth.features.roles.v1.service import RoleService, get_role_service
 from src_auth.features.shared.dependencies import RequireRole, get_current_user_payload
-from src_auth.features.shared.schemas import StatusResponse
+from src_auth.features.shared.schemas import ErrorResponse, StatusResponse
 
 router = APIRouter(
     prefix="/v1",
@@ -22,7 +22,14 @@ router = APIRouter(
 )
 
 
-@router.post("/roles")
+@router.post(
+    "/roles",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+    },
+)
 async def create_role(
     role_data: CerateRoleRequest,
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
@@ -35,7 +42,13 @@ async def create_role(
     return RoleResponse.model_validate(role)
 
 
-@router.get("/roles")
+@router.get(
+    "/roles",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+    },
+)
 async def get_roles(
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
     role_service: Annotated[RoleService, Depends(get_role_service)],
@@ -44,7 +57,14 @@ async def get_roles(
     return [RoleResponse.model_validate(role) for role in roles]
 
 
-@router.patch("/roles/{role_id}")
+@router.patch(
+    "/roles/{role_id}",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+)
 async def update_role(
     role_id: UUID,
     update_data: UpdateRoleRequest,
@@ -59,7 +79,14 @@ async def update_role(
     return RoleResponse.model_validate(role)
 
 
-@router.delete("/roles/{role_id}")
+@router.delete(
+    "/roles/{role_id}",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+)
 async def delete_role(
     role_id: UUID,
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
@@ -69,7 +96,15 @@ async def delete_role(
     return StatusResponse()
 
 
-@router.post("/roles/{role_id}/users/{user_id}")
+@router.post(
+    "/roles/{role_id}/users/{user_id}",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+    },
+)
 async def assign_role(
     role_id: UUID,
     user_id: UUID,
@@ -83,7 +118,13 @@ async def assign_role(
     return StatusResponse()
 
 
-@router.get("/roles/{role_id}/users/{user_id}")
+@router.get(
+    "/roles/{role_id}/users/{user_id}",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+    },
+)
 async def check_role_assignment(
     role_id: UUID,
     user_id: UUID,
@@ -97,7 +138,14 @@ async def check_role_assignment(
     return IsRoleAssignedResponse(is_assigned=is_assigned)
 
 
-@router.delete("/roles/{role_id}/users/{user_id}")
+@router.delete(
+    "/roles/{role_id}/users/{user_id}",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
+)
 async def revoke_role(
     role_id: UUID,
     user_id: UUID,
