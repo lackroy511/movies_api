@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, insert, select, update, exists
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,6 +62,10 @@ class RoleRepositoryInterface(ABC):
     async def revoke_user_from_role(self, user_id: UUID, role_id: UUID) -> bool:
         pass
 
+    @abstractmethod
+    async def is_system_role(self, role_id: UUID) -> bool:
+        pass
+
 
 class RoleRepository(RoleRepositoryInterface):
     def __init__(self, session: AsyncSession) -> None:
@@ -82,7 +86,7 @@ class RoleRepository(RoleRepositoryInterface):
             if getattr(e.orig, "pgcode", None) == "23505":
                 raise RoleAlreadyExistsError("Role already exists") from None
             raise
-        
+
         created = result.scalar_one()
         return RoleDTO(
             id=created.id,
@@ -187,6 +191,11 @@ class RoleRepository(RoleRepositoryInterface):
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none() is not None
+
+    async def is_system_role(self, role_id: UUID) -> bool:
+        query = select(exists().where(Role.id == role_id, Role.is_system.is_(True)))
+        result = await self.session.execute(query)
+        return result.scalar() or False
 
 
 async def get_role_repository(
