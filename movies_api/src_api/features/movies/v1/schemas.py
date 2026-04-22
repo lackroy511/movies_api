@@ -1,9 +1,12 @@
+from datetime import date
 
 from pydantic import BaseModel, Field
 
 
 class MovieResponse(BaseModel):
     id: str
+    creation_date: date | None = Field(description="Creation date")
+    file_path: str | None = Field(description="Path to movie file")
     title: str = Field(description="Movie title")
     description: str | None = Field(description="Movie description")
     imdb_rating: float | None = Field(description="IMDB rating")

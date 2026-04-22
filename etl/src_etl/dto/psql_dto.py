@@ -15,6 +15,8 @@ class BasePostgresDTO:
 @dataclass(frozen=True)
 class MovieDTO(BasePostgresDTO):
     id: UUID
+    creation_date: date | None
+    file_path: str | None
     title: str
     description: str | None
     creation_date: date | None

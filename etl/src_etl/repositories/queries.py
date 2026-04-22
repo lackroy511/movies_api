@@ -2,9 +2,10 @@ UPDATED_MOVIES = """
 WITH changed_films AS (
     SELECT
         fw.id,
+        fw.creation_date,
+        fw.file_path,
         fw.title,
         fw.description,
-        fw.creation_date,
         fw.rating,
         fw.type,
         fw.created_at,
@@ -71,9 +72,10 @@ genres_agg AS (
 
 SELECT
     fw.id,
+    fw.creation_date,
+    fw.file_path,
     fw.title,
     fw.description,
-    fw.creation_date,
     fw.rating,
     fw.type,
     fw.created_at,

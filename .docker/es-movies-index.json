@@ -45,6 +45,12 @@
             "id": {
                 "type": "keyword"
             },
+            "creation_date": {
+                "type": "date"
+            },
+            "file_path": {
+                "type": "keyword"
+            },
             "imdb_rating": {
                 "type": "float"
             },

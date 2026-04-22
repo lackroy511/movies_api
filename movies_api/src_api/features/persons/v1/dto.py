@@ -1,3 +1,4 @@
+from datetime import date
 from dataclasses import dataclass
 
 
@@ -27,6 +28,8 @@ class PersonMoviesListDTO:
 @dataclass(frozen=True)
 class PersonMovieDTO:
     id: str
+    creation_date: date | None
+    file_path: str | None
     title: str
     imdb_rating: float | None
     roles: list[str]

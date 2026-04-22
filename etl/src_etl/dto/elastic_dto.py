@@ -16,7 +16,9 @@ class MetaDataDTO:
 @dataclass(frozen=True)
 class MovieDocDTO:
     id: str
-    title: str
+    creation_date: str
+    file_path: str | None
+    title: str | None
     description: str | None
     imdb_rating: float | None
     genres: List[str]
