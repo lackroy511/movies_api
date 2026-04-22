@@ -22,5 +22,7 @@ class Settings(BaseSettings):
     redis_base_url: str
     redis_cache_ttl: int
 
+    secret_key: str
+    
 
 settings = Settings()  # ty: ignore
