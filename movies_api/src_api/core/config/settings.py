@@ -1,3 +1,4 @@
+from src_api.features.shared.types import RolesType
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,7 +25,7 @@ class Settings(BaseSettings):
 
     secret_key: str
     
-    subscriber_role: str = "subscriber"
+    subscriber_role: RolesType = "subscriber"
     
 
 settings = Settings()  # ty: ignore
