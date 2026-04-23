@@ -1,10 +1,9 @@
 import logging
-import elasticsearch
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
 from src_api.api.router import router as main_router
 from src_api.core.config.lifespan import lifespan
+from src_api.core.exc.handlers import setup_exception_handlers
 
 log = logging.getLogger(__name__)
 
@@ -18,35 +17,7 @@ app = FastAPI(
 )
 app.include_router(main_router)
 
-
-@app.exception_handler(elasticsearch.exceptions.NotFoundError)
-async def elastic_not_found_handler(
-    request: Request,
-    exc: elasticsearch.exceptions.NotFoundError,
-) -> JSONResponse:
-    if exc.message == "index_not_found_exception":
-        return JSONResponse(
-            status_code=500,
-            content={"detail": "Elastic index not found error"},
-        )
-    
-    raise exc
-
-
-@app.exception_handler(Exception)
-async def unexpected_error_handler(
-    request: Request,
-    exc: Exception,
-) -> JSONResponse:
-    try:
-        raise exc
-    except Exception:
-        log.exception("Unexpected error")
-    
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Unexpected server error"},
-    )
+setup_exception_handlers(app)
 
 
 if __name__ == "__main__":

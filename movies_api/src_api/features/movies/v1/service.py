@@ -47,6 +47,7 @@ class MoviesService:
         sort: str | None,
         genre: str | None,
         search: str | None,
+        user_roles: list[str] | None,
     ) -> MoviesListDTO:
         cache_key = self.cache_client.build_cache_key(
             self.cache_prefix,
@@ -55,6 +56,7 @@ class MoviesService:
             sort,
             genre,
             search,
+            user_roles,
         )
 
         movies = await self.cache_client.get_cache(cache_key, MoviesListDTO)
