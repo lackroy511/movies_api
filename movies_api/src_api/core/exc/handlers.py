@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from elasticsearch.exceptions import NotFoundError
 
-from src_api.core.exc.exceptions import UnauthorizedError
+from src_api.core.exc.exceptions import UnauthorizedError, ForbiddenError
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,12 @@ async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
+async def forbidden_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(status_code=403, content={"detail": "Forbidden error"})
+
+
 def setup_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, unexpected_error_handler)
     app.add_exception_handler(NotFoundError, elastic_not_found_handler)
     app.add_exception_handler(UnauthorizedError, unauthorized_error_handler)
+    app.add_exception_handler(ForbiddenError, forbidden_error_handler)

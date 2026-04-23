@@ -1,4 +1,11 @@
+from src_api.core.exc.exceptions import ForbiddenError
+from src_api.core.config.settings import settings
+from src_api.features.shared.types import RolesType
+from datetime import date
 from typing import Annotated, cast
+
+from dateutil.relativedelta import relativedelta
+
 
 from fastapi import Depends
 
@@ -26,17 +33,19 @@ class MoviesService:
         self.cache_client = cache_client
         self.cache_prefix = "movies"
 
-    async def get_by_id(self, id: str) -> MovieDTO:
+    async def get_by_id(self, id: str, user_roles: list[RolesType]) -> MovieDTO:
         cache_key = self.cache_client.build_cache_key(self.cache_prefix, id)
 
         movie = await self.cache_client.get_cache(cache_key, MovieDTO)
         if movie:
+            self._check_movie_access(movie, user_roles)
             return movie
 
         movie = await self.repo.get_by_id(id)
         if not movie:
             raise MovieNotFoundError("Movie not found")
 
+        self._check_movie_access(movie, user_roles)
         await self.cache_client.set_cache(cache_key, movie)
         return movie
 
@@ -47,7 +56,6 @@ class MoviesService:
         sort: str | None,
         genre: str | None,
         search: str | None,
-        user_roles: list[str] | None,
     ) -> MoviesListDTO:
         cache_key = self.cache_client.build_cache_key(
             self.cache_prefix,
@@ -56,7 +64,6 @@ class MoviesService:
             sort,
             genre,
             search,
-            user_roles,
         )
 
         movies = await self.cache_client.get_cache(cache_key, MoviesListDTO)
@@ -73,6 +80,21 @@ class MoviesService:
         )
         await self.cache_client.set_cache(cache_key, movies)
         return movies
+
+    def _check_movie_access(self, movie: MovieDTO, user_roles: list[RolesType]) -> None:
+        if movie.creation_date:
+            if (
+                self._is_older(movie.creation_date, settings.non_subscriber_content_age)
+                and settings.subscriber_role not in user_roles
+            ):
+                raise ForbiddenError("Access forbidden")
+
+    def _is_older(self, movie_date: str, non_subscriber_content_age: int) -> bool:
+        date_obj = date.fromisoformat(movie_date)
+        three_years_ago = date.today() - relativedelta(
+            years=settings.non_subscriber_content_age,
+        )
+        return date_obj > three_years_ago
 
 
 def get_movies_service(

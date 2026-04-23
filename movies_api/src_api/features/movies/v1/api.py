@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src_api.features.movies.v1.exceptions import ErrorMessages, MovieNotFoundError
-from src_api.features.movies.v1.schemas import MovieResponse
+from src_api.features.movies.v1.schemas import MovieResponse, MovieDetailResponse
 from src_api.features.movies.v1.service import MoviesService, get_movies_service
 from src_api.features.shared.query_params import PaginationParams
 from src_api.features.shared.schemas import PaginatedResponse
@@ -19,7 +19,6 @@ router = APIRouter(prefix="/v1", tags=["V1 Movies"])
 async def get_movies_list(
     movies_service: Annotated[MoviesService, Depends(get_movies_service)],
     pagination: Annotated[PaginationParams, Depends(PaginationParams)],
-    current_user_roles: Annotated[list[RolesType], Depends(get_current_user_roles)],
     sort: SortMoviesType | None = Query(None, description="Sort by field"),  # noqa: B008
     genre: str | None = Query(None, description="Filter by genre name"),
     search: str | None = Query(None, description="Full text search"),
@@ -56,10 +55,10 @@ async def get_movie_by_id(
     movie_id: UUID,
     movies_service: Annotated[MoviesService, Depends(get_movies_service)],
     current_user_roles: Annotated[list[RolesType], Depends(get_current_user_roles)],
-) -> MovieResponse:
+) -> MovieDetailResponse:
     try:
-        movie = await movies_service.get_by_id(str(movie_id))
-        return MovieResponse(**asdict(movie))
+        movie = await movies_service.get_by_id(str(movie_id), current_user_roles)
+        return MovieDetailResponse(**asdict(movie))
     except MovieNotFoundError:
         raise HTTPException(
             status_code=404,

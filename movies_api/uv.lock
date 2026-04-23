@@ -571,6 +571,7 @@ dependencies = [
     { name = "fastapi", extra = ["all"] },
     { name = "gunicorn" },
     { name = "pyjwt" },
+    { name = "python-dateutil" },
     { name = "redis" },
 ]
 
@@ -591,6 +592,7 @@ requires-dist = [
     { name = "fastapi", extras = ["all"], specifier = ">=0.135.1" },
     { name = "gunicorn", specifier = ">=25.3.0" },
     { name = "pyjwt", specifier = ">=2.12.1" },
+    { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "redis", specifier = ">=7.3.0" },
 ]
 

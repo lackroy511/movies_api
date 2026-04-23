@@ -1,19 +1,20 @@
-from datetime import date
-
 from pydantic import BaseModel, Field
 
 
 class MovieResponse(BaseModel):
     id: str
-    creation_date: date | None = Field(description="Creation date")
-    file_path: str | None = Field(description="Path to movie file")
     title: str = Field(description="Movie title")
     description: str | None = Field(description="Movie description")
+    creation_date: str | None = Field(description="Creation date")
     imdb_rating: float | None = Field(description="IMDB rating")
     genres: list[str] = Field(description="Movie genres")
     directors_names: list[str] = Field(description="Directors names")
     actors_names: list[str] = Field(description="Actors names")
     writers_names: list[str] = Field(description="Writers names")
+
+
+class MovieDetailResponse(MovieResponse):
+    file_path: str | None = Field(description="Path to movie file")
     directors: list[MoviePerson] = Field(description="Directors")
     actors: list[MoviePerson] = Field(description="Actors")
     writers: list[MoviePerson] = Field(description="Writers")

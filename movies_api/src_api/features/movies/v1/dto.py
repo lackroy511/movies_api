@@ -1,4 +1,3 @@
-from datetime import date
 from dataclasses import dataclass
 
 
@@ -11,7 +10,7 @@ class MoviesListDTO:
 @dataclass(frozen=False)
 class MovieDTO:
     id: str
-    creation_date: date | None
+    creation_date: str | None
     file_path: str | None
     title: str
     description: str | None

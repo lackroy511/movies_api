@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     secret_key: str
     
     subscriber_role: RolesType = "subscriber"
+    non_subscriber_content_age: int = 3
     
 
 settings = Settings()  # ty: ignore

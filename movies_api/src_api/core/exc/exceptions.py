@@ -6,3 +6,7 @@ class BaseMoviesAPIError(Exception):
 
 class UnauthorizedError(BaseMoviesAPIError):
     pass
+
+
+class ForbiddenError(BaseMoviesAPIError):
+    pass
