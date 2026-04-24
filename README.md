@@ -11,6 +11,16 @@
 # Тесты
 Movies API функциональные тесты:
 ```
-docker compose -f movies_api/src_api/tests/functional/docker-compose.yml run --build --rm movies_api_run_tests && \
-    docker compose -f movies_api/src_api/tests/functional/docker-compose.yml down
+docker compose -f movies_api/src_api/tests/functional/docker-compose.yml \
+    run --build --rm movies_api_run_tests 
+&& docker compose -f movies_api/src_api/tests/functional/docker-compose.yml \
+    down
+```
+
+Auth API функциональные тесты:
+```
+docker compose -f auth_api/src_auth/tests/functional/docker-compose.yml \
+    run --build --rm auth_api_run_tests \
+&& docker compose -f auth_api/src_auth/tests/functional/docker-compose.yml \
+    down
 ```

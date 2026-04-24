@@ -23,5 +23,7 @@ RUN uv sync
 COPY . .
 
 RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN mkdir -p /app/logs \
+    && chown -R appuser:appuser /app/logs
 
 USER appuser
