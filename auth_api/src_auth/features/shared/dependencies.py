@@ -1,5 +1,5 @@
-from src_auth.features.auth.v1.service import SessionService, get_session_service
 from typing import Annotated
+
 from fastapi import Depends, Request
 
 from src_auth.core.config.settings import RolesType
@@ -7,6 +7,7 @@ from src_auth.core.exc.exceptions import (
     AccessDeniedError,
 )
 from src_auth.core.security.jwt import TokenPayload
+from src_auth.features.auth.v1.service import SessionService, get_session_service
 
 
 class RequireRole:

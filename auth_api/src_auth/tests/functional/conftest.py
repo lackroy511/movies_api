@@ -1,18 +1,19 @@
+from typing import AsyncGenerator, Awaitable, Callable
+
 import pytest
-from typing import AsyncGenerator, Callable, Awaitable
 import redis.asyncio as aioredis
+from aiohttp import ClientSession
+from alembic import command
+from alembic.config import Config
 from pytest_asyncio import fixture as async_fixture
-from src_auth.tests.functional.settings import test_settings
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
+    create_async_engine,
 )
-from aiohttp import ClientSession
-from alembic.config import Config
-from alembic import command
 
+from src_auth.tests.functional.settings import test_settings
 
 MakeGetRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
 MakePostRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]

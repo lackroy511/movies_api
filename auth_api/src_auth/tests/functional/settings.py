@@ -1,6 +1,6 @@
-from pydantic import computed_field
 from pathlib import Path
 
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent.parent.parent.parent
@@ -22,6 +22,8 @@ class TestsSettings(BaseSettings):
     postgres_password: str
     db_host: str
     db_port: int
+    
+    admin_email: str
     
     @computed_field
     @property

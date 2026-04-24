@@ -1,10 +1,11 @@
-from sqlalchemy.exc import IntegrityError
 from uuid import uuid4
-from src_auth.core.security.hash_pass import hash_password
-from sqlalchemy import select, insert
+
+from sqlalchemy import insert, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.core.config.settings import settings
+from src_auth.core.security.hash_pass import hash_password
 from src_auth.features.roles.v1.models import Role, user_roles
 from src_auth.features.users.v1.models import User
 

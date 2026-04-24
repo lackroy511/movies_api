@@ -4,9 +4,9 @@ from uuid import UUID
 from fastapi import Depends
 
 from src_auth.core.exc.exceptions import (
+    AccessDeniedError,
     RoleNotFoundError,
     UserOrRoleNotFoundError,
-    AccessDeniedError,
 )
 from src_auth.features.roles.v1.dto import CreateRoleDTO, RoleDTO
 from src_auth.features.roles.v1.repository import (

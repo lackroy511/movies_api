@@ -1,4 +1,3 @@
-from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from typing import Annotated
 from uuid import UUID
 
@@ -6,6 +5,7 @@ import jwt
 from fastapi import Depends, Request, Response
 
 from src_auth.core.config.settings import settings
+from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
