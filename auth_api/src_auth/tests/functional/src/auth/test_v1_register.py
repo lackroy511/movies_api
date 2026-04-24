@@ -1,10 +1,10 @@
 import pytest
-from src_auth.tests.functional.conftest import MakePostRequestType
+from src_auth.tests.functional.conftest import MakeRequestType
 
 
 @pytest.mark.asyncio
 async def test_register_success(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
     payload = {
@@ -14,7 +14,7 @@ async def test_register_success(
         "password": "Password123!",
         "password_confirm": "Password123!",
     }
-    body, status = await make_post_request("/v1/register", payload)
+    body, status, _ = await make_request("POST", "/v1/register", data=payload)
 
     assert status == 200
     assert body["email"] == payload["email"]
@@ -23,7 +23,7 @@ async def test_register_success(
 
 @pytest.mark.asyncio
 async def test_register_conflict(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
     payload = {
@@ -33,9 +33,9 @@ async def test_register_conflict(
         "password": "Password123!",
         "password_confirm": "Password123!",
     }
-    await make_post_request("/v1/register", payload)
+    await make_request("POST", "/v1/register", data=payload)
 
-    body, status = await make_post_request("/v1/register", payload)
+    body, status, _ = await make_request("POST", "/v1/register", data=payload)
 
     assert status == 409
     assert body["detail"] == "User already exists"
@@ -43,7 +43,7 @@ async def test_register_conflict(
 
 @pytest.mark.asyncio
 async def test_register_optional_last_name(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
     payload = {
@@ -52,7 +52,7 @@ async def test_register_optional_last_name(
         "password": "Password123!",
         "password_confirm": "Password123!",
     }
-    body, status = await make_post_request("/v1/register", payload)
+    body, status, _ = await make_request("POST", "/v1/register", data=payload)
 
     assert status == 200
     assert body["email"] == payload["email"]
@@ -62,7 +62,6 @@ async def test_register_optional_last_name(
 @pytest.mark.parametrize(
     "payload, expected_error",
     [
-        # Password mismatch
         (
             {
                 "email": "test@example.com",
@@ -73,7 +72,6 @@ async def test_register_optional_last_name(
             },
             "Passwords do not match",
         ),
-        # Invalid email format
         (
             {
                 "email": "not-an-email",
@@ -84,7 +82,6 @@ async def test_register_optional_last_name(
             },
             "value is not a valid email address",
         ),
-        # First name too short (< 3)
         (
             {
                 "email": "test@example.com",
@@ -95,7 +92,6 @@ async def test_register_optional_last_name(
             },
             "String should have at least 3 characters",
         ),
-        # First name too long (> 50)
         (
             {
                 "email": "test@example.com",
@@ -106,7 +102,6 @@ async def test_register_optional_last_name(
             },
             "String should have at most 50 characters",
         ),
-        # Last name too short (< 3)
         (
             {
                 "email": "test@example.com",
@@ -117,7 +112,6 @@ async def test_register_optional_last_name(
             },
             "String should have at least 3 characters",
         ),
-        # Last name too long (> 50)
         (
             {
                 "email": "test@example.com",
@@ -128,7 +122,6 @@ async def test_register_optional_last_name(
             },
             "String should have at most 50 characters",
         ),
-        # Password too short (< 4)
         (
             {
                 "email": "test@example.com",
@@ -139,7 +132,6 @@ async def test_register_optional_last_name(
             },
             "String should have at least 4 characters",
         ),
-        # Password too long (> 100)
         (
             {
                 "email": "test@example.com",
@@ -153,12 +145,12 @@ async def test_register_optional_last_name(
     ],
 )
 async def test_register_validation(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
     payload: dict,
     expected_error: str,
 ) -> None:
-    body, status = await make_post_request("/v1/register", payload)
+    body, status, _ = await make_request("POST", "/v1/register", data=payload)
 
     assert status == 422
     errors = body.get("detail", [])

@@ -25,6 +25,9 @@ class TestsSettings(BaseSettings):
     
     admin_email: str
     
+    access_cookie_name: str = "access_token"
+    refresh_cookie_name: str = "refresh_token"
+    
     @computed_field
     @property
     def db_url(self) -> str:

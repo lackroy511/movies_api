@@ -1,5 +1,6 @@
 from typing import AsyncGenerator, Awaitable, Callable
 
+import asyncio
 import pytest
 import redis.asyncio as aioredis
 from aiohttp import ClientSession
@@ -15,39 +16,40 @@ from sqlalchemy.ext.asyncio import (
 
 from src_auth.tests.functional.settings import test_settings
 
-MakeGetRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
-MakePostRequestType = Callable[[str, dict | None], Awaitable[tuple[dict, int]]]
+MakeRequestType = Callable[..., Awaitable[tuple[dict, int, dict]]]
 
 
 # http fixtures
 @async_fixture
-def make_get_request(aiohttp_session: ClientSession) -> MakeGetRequestType:
-    async def inner(path: str, params: dict | None = None) -> tuple[dict, int]:
-        if not params:
-            params = {}
-
+def make_request(aiohttp_session: ClientSession) -> MakeRequestType:
+    async def inner(
+        method: str,
+        path: str,
+        params: dict | None = None,
+        data: dict | None = None,
+        cookies: dict | None = None,
+    ) -> tuple[dict, int, dict]:
         url = test_settings.auth_api_base_url + path
-        async with aiohttp_session.get(url, params=params) as response:
+
+        request_method = getattr(aiohttp_session, method.lower(), None)
+        if request_method is None:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+
+        kwargs = {}
+        if params:
+            kwargs["params"] = params
+        if data is not None:
+            kwargs["json"] = data
+        if cookies:
+            kwargs["cookies"] = cookies
+
+        async with request_method(url, **kwargs) as response:
             body = await response.json()
             status = response.status
+            cookies = response.cookies
 
-        return body, status
-
-    return inner
-
-
-@async_fixture
-def make_post_request(aiohttp_session: ClientSession) -> MakePostRequestType:
-    async def inner(path: str, data: dict | None = None) -> tuple[dict, int]:
-        if not data:
-            data = {}
-
-        url = test_settings.auth_api_base_url + path
-        async with aiohttp_session.post(url, json=data) as response:
-            body = await response.json()
-            status = response.status
-
-        return body, status
+        await asyncio.sleep(0.05)
+        return body, status, cookies
 
     return inner
 

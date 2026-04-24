@@ -1,10 +1,10 @@
 import pytest
-from src_auth.tests.functional.conftest import MakePostRequestType
+from src_auth.tests.functional.conftest import MakeRequestType
 
 
 @pytest.mark.asyncio
 async def test_login_success(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
     register_payload = {
@@ -14,21 +14,20 @@ async def test_login_success(
         "password": "Password123!",
         "password_confirm": "Password123!",
     }
-    await make_post_request("/v1/register", register_payload)
+    await make_request("POST", "/v1/register", data=register_payload)
 
     login_payload = {
         "email": "login-test@example.com",
         "password": "Password123!",
     }
-    body, status = await make_post_request("/v1/login", login_payload)
-
+    body, status, _ = await make_request("POST", "/v1/login", data=login_payload)
     assert status == 200
     assert body["email"] == login_payload["email"]
 
 
 @pytest.mark.asyncio
 async def test_login_invalid_credentials(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
     register_payload = {
@@ -38,13 +37,13 @@ async def test_login_invalid_credentials(
         "password": "Password123!",
         "password_confirm": "Password123!",
     }
-    await make_post_request("/v1/register", register_payload)
+    await make_request("POST", "/v1/register", data=register_payload)
 
     login_payload = {
         "email": "wrong-pass@example.com",
         "password": "WrongPassword456!",
     }
-    body, status = await make_post_request("/v1/login", login_payload)
+    body, status, _ = await make_request("POST", "/v1/login", data=login_payload)
 
     assert status == 401
     assert body["detail"] == "Invalid credentials"
@@ -52,14 +51,14 @@ async def test_login_invalid_credentials(
 
 @pytest.mark.asyncio
 async def test_login_user_not_found(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
     payload = {
         "email": "nonexistent@example.com",
         "password": "Password123!",
     }
-    body, status = await make_post_request("/v1/login", payload)
+    body, status, _ = await make_request("POST", "/v1/login", data=payload)
 
     assert status == 404
     assert body["detail"] == "User not found"
@@ -92,12 +91,12 @@ async def test_login_user_not_found(
     ],
 )
 async def test_login_validation(
-    make_post_request: MakePostRequestType,
+    make_request: MakeRequestType,
     clear_users_table: None,
     payload: dict,
     expected_error: str,
 ) -> None:
-    body, status = await make_post_request("/v1/login", payload)
+    body, status, _ = await make_request("POST", "/v1/login", data=payload)
 
     assert status == 422
     errors = body.get("detail", [])
