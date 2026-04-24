@@ -48,7 +48,7 @@ def make_request(aiohttp_session: ClientSession) -> MakeRequestType:
             status = response.status
             cookies = response.cookies
 
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.02)
         return body, status, cookies
 
     return inner
