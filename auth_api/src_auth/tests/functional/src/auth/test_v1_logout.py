@@ -1,8 +1,6 @@
-import pytest
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
-@pytest.mark.asyncio
 async def test_logout_success(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -30,7 +28,6 @@ async def test_logout_success(
     assert status == 200
 
 
-@pytest.mark.asyncio
 async def test_logout_unauthorized(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -41,7 +38,6 @@ async def test_logout_unauthorized(
     assert body["detail"] == "Invalid or expired token"
 
 
-@pytest.mark.asyncio
 async def test_logout_invalid_token(
     make_request: MakeRequestType,
     clear_users_table: None,

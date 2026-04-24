@@ -2,7 +2,6 @@ import pytest
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
-@pytest.mark.asyncio
 async def test_register_success(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -21,7 +20,6 @@ async def test_register_success(
     assert body["first_name"] == payload["first_name"]
 
 
-@pytest.mark.asyncio
 async def test_register_conflict(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -41,7 +39,6 @@ async def test_register_conflict(
     assert body["detail"] == "User already exists"
 
 
-@pytest.mark.asyncio
 async def test_register_optional_last_name(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -58,7 +55,6 @@ async def test_register_optional_last_name(
     assert body["email"] == payload["email"]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "payload, expected_error",
     [

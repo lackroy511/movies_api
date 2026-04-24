@@ -2,7 +2,6 @@ import pytest
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
-@pytest.mark.asyncio
 async def test_refresh_success(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -23,8 +22,8 @@ async def test_refresh_success(
     _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
 
     body, status, new_cookies = await make_request(
-        "POST", 
-        "/v1/refresh", 
+        "POST",
+        "/v1/refresh",
         cookies=cookies,
     )
 
@@ -33,7 +32,6 @@ async def test_refresh_success(
     assert "refresh_token" in new_cookies
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "cookies, expected_detail",
     [
@@ -52,7 +50,6 @@ async def test_refresh_invalid_token(
     assert body["detail"] == expected_detail
 
 
-@pytest.mark.asyncio
 async def test_refresh_blacklisted_token(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -75,8 +72,8 @@ async def test_refresh_blacklisted_token(
     await make_request("POST", "/v1/logout", cookies=cookies)
 
     body, status, _ = await make_request(
-        "POST", 
-        "/v1/refresh", 
+        "POST",
+        "/v1/refresh",
         cookies=cookies,
     )
 
@@ -84,7 +81,6 @@ async def test_refresh_blacklisted_token(
     assert body["detail"] == "Invalid or expired token"
 
 
-@pytest.mark.asyncio
 async def test_refresh_revoked_session(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -108,8 +104,8 @@ async def test_refresh_revoked_session(
     await make_request("POST", "/v1/logout-all", cookies=new_cookies)
 
     body, status, _ = await make_request(
-        "POST", 
-        "/v1/refresh", 
+        "POST",
+        "/v1/refresh",
         cookies=old_cookies,
     )
 

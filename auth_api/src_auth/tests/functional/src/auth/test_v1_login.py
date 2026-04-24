@@ -2,7 +2,6 @@ import pytest
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
-@pytest.mark.asyncio
 async def test_login_success(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -25,7 +24,6 @@ async def test_login_success(
     assert body["email"] == login_payload["email"]
 
 
-@pytest.mark.asyncio
 async def test_login_invalid_credentials(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -49,7 +47,6 @@ async def test_login_invalid_credentials(
     assert body["detail"] == "Invalid credentials"
 
 
-@pytest.mark.asyncio
 async def test_login_user_not_found(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -64,7 +61,6 @@ async def test_login_user_not_found(
     assert body["detail"] == "User not found"
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "payload, expected_error",
     [

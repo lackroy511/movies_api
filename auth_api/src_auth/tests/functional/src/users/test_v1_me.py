@@ -1,11 +1,9 @@
-import pytest
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from src_auth.features.users.v1.models import User
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
-@pytest.mark.asyncio
 async def test_get_me_success(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -37,7 +35,6 @@ async def test_get_me_success(
     assert body["last_name"] == register_payload["last_name"]
 
 
-@pytest.mark.asyncio
 async def test_get_me_unauthorized(
     make_request: MakeRequestType,
 ) -> None:
@@ -51,7 +48,6 @@ async def test_get_me_unauthorized(
     assert body["detail"] == "Invalid or expired token"
 
 
-@pytest.mark.asyncio
 async def test_get_me_invalid_token(
     make_request: MakeRequestType,
 ) -> None:
@@ -65,7 +61,6 @@ async def test_get_me_invalid_token(
     assert body["detail"] == "Invalid or expired token"
 
 
-@pytest.mark.asyncio
 async def test_get_me_not_found(
     make_request: MakeRequestType,
     db_session: AsyncSession,

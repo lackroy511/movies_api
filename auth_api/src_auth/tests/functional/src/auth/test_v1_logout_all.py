@@ -1,8 +1,6 @@
-import pytest
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
-@pytest.mark.asyncio
 async def test_logout_all_success(
     make_request: MakeRequestType,
     clear_users_table: None,
@@ -40,7 +38,6 @@ async def test_logout_all_success(
     assert status_3 == 401
 
 
-@pytest.mark.asyncio
 async def test_logout_all_unauthorized(
     make_request: MakeRequestType,
     clear_users_table: None,
