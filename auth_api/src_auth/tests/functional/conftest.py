@@ -90,8 +90,8 @@ async def db_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
             expire_on_commit=False,
         )
         async with async_session() as session:
-            async with session.begin():
-                yield session
+            # async with session.begin():
+            yield session
 
 
 @async_fixture(scope="session")

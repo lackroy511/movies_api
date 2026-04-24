@@ -1,3 +1,5 @@
+from src_auth.core.exc.exceptions import UserNotFoundError
+from sqlalchemy.exc import IntegrityError
 from abc import ABC, abstractmethod
 from typing import Annotated
 from uuid import UUID
@@ -66,14 +68,24 @@ class TokenVersionRepo(TokenVersionRepoInterface):
         self.session = session
 
     async def create_user_token_version(self, user_id: UUID) -> TokenVersionDTO:
-        query = (
-            insert(TokenVersion)
-            .values(user_id=user_id, version=0)
-            .returning(TokenVersion)
-        )
-        result = await self.session.execute(query)
-        created = result.scalar_one()
-        return TokenVersionDTO(user_id=created.user_id, version=created.version)
+        try:
+            query = (
+                insert(TokenVersion)
+                .values(user_id=user_id, version=0)
+                .returning(TokenVersion)
+            )
+            result = await self.session.execute(query)
+            created = result.scalar_one()
+            return TokenVersionDTO(user_id=created.user_id, version=created.version)
+        except IntegrityError as e:
+            orig = getattr(e, "orig", None)
+            if not orig or not hasattr(orig, "pgcode"):
+                raise
+
+            if orig.pgcode == "23503":
+                raise UserNotFoundError("User not found") from None
+
+            raise
 
     async def get_user_token_version(self, user_id: UUID) -> TokenVersionDTO | None:
         query = select(TokenVersion.version).where(TokenVersion.user_id == user_id)
