@@ -1,3 +1,5 @@
+from src_auth.core.config.settings import RolesType
+from src_auth.core.config.settings import settings
 from pathlib import Path
 
 from pydantic import computed_field
@@ -23,10 +25,14 @@ class TestsSettings(BaseSettings):
     db_host: str
     db_port: int
     
-    admin_email: str
+    default_user_roles: list[RolesType] = settings.default_user_roles
+    admin_role: RolesType = settings.admin_role
     
-    access_cookie_name: str = "access_token"
-    refresh_cookie_name: str = "refresh_token"
+    admin_email: str
+    admin_password: str
+    
+    access_cookie_name: str = settings.access_cookie_name
+    refresh_cookie_name: str = settings.refresh_cookie_name
     
     @computed_field
     @property
