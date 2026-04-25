@@ -16,7 +16,7 @@ class TestsSettings(BaseSettings):
 
     base_dir: Path = BASE_DIR
 
-    auth_api_base_url: str = "http://movies_api:8020/api/auth"
+    auth_api_base_url: str = "http://auth_api:8020/api/auth"
     redis_base_url: str = "redis://auth_redis:6379"
     
     postgres_db: str
