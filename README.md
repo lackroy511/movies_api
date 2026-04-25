@@ -9,8 +9,8 @@
 
 # Адреса / Документация
 - http://127.0.0.1/admin/ - Админка
-- http://127.0.0.1/api/movies/doc/ - Документация апи по фильмам
-- http://127.0.0.1/api/api/auth/doc/ - Документация апи по авторизации
+- http://127.0.0.1/api/auth/doc/ - OpenAPI Auth API
+- http://127.0.0.1/api/movies/doc/ - OpenAPI Movies API
 * [Документация Auth API.](auth_api/README.md)
 * [Документация Movies API](movies_api/README.md)
 
