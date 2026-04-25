@@ -6,7 +6,8 @@ services:
       dockerfile: Dockerfile.tests
     image: auth_api_tests
     command: >
-      sh -c "gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:8010 src_api.main:app --no-control-socket"
+      sh -c "alembic -c /app/alembic.ini upgrade head &&
+             gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:8020 src_auth.main:app --no-control-socket"
     env_file:
       - ../../../.env
       - ../../../../.env

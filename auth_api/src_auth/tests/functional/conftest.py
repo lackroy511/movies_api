@@ -48,7 +48,7 @@ def make_request(aiohttp_session: ClientSession) -> MakeRequestType:
             status = response.status
             cookies = response.cookies
 
-        await asyncio.sleep(0.04)
+        await asyncio.sleep(0.02)
         return body, status, cookies
 
     return inner
@@ -90,12 +90,11 @@ async def db_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
             expire_on_commit=False,
         )
         async with async_session() as session:
-            # async with session.begin():
             yield session
 
 
 @async_fixture(scope="session")
-async def engine(apply_migrations: None) -> AsyncGenerator[AsyncEngine, None]:
+async def engine() -> AsyncGenerator[AsyncEngine, None]:
     engine = create_async_engine(test_settings.db_url, echo=False)
     yield engine
     await engine.dispose()
