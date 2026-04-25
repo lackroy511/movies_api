@@ -1,42 +1,12 @@
 import pytest
 from src_auth.tests.functional.conftest import MakeRequestType
-from src_auth.tests.functional.settings import test_settings
-
-
-async def get_admin_cookies(make_request: MakeRequestType) -> dict:
-    payload = {
-        "email": test_settings.admin_email,
-        "password": test_settings.admin_password,
-    }
-    _, _, cookies = await make_request("POST", "/v1/login", data=payload)
-    return cookies
-
-
-async def get_user_cookies(
-    make_request: MakeRequestType,
-    email: str,
-    password: str,
-) -> dict:
-    register_payload = {
-        "email": email,
-        "first_name": "User",
-        "last_name": "Test",
-        "password": password,
-        "password_confirm": password,
-    }
-    await make_request("POST", "/v1/register", data=register_payload)
-
-    login_payload = {
-        "email": email,
-        "password": password,
-    }
-    _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
-    return cookies
+from src_auth.tests.functional.src.roles.conftest import GetCookieType
 
 
 async def test_create_role_success(
     make_request: MakeRequestType,
     clear_roles: None,
+    get_admin_cookies: GetCookieType,
 ) -> None:
     cookies = await get_admin_cookies(make_request)
     payload = {
@@ -59,6 +29,7 @@ async def test_create_role_success(
 async def test_create_role_no_description(
     make_request: MakeRequestType,
     clear_roles: None,
+    get_admin_cookies: GetCookieType,
 ) -> None:
     cookies = await get_admin_cookies(make_request)
     payload = {
@@ -79,6 +50,7 @@ async def test_create_role_no_description(
 async def test_create_role_conflict(
     make_request: MakeRequestType,
     clear_roles: None,
+    get_admin_cookies: GetCookieType,
 ) -> None:
     cookies = await get_admin_cookies(make_request)
     payload = {
@@ -120,6 +92,7 @@ async def test_create_role_unauthorized(
 async def test_create_role_forbidden(
     make_request: MakeRequestType,
     clear_roles: None,
+    get_user_cookies: GetCookieType,
 ) -> None:
     cookies = await get_user_cookies(
         make_request,
@@ -167,6 +140,7 @@ async def test_create_role_validation(
     clear_roles: None,
     payload: dict,
     expected_error: str,
+    get_admin_cookies: GetCookieType,
 ) -> None:
     cookies = await get_admin_cookies(make_request)
     body, status, _ = await make_request(
