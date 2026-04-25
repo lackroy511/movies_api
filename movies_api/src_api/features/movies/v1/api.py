@@ -49,6 +49,14 @@ async def get_movies_list(
                 },
             },
         },
+        403: {
+            "description": ErrorMessages.FORBIDDEN_ERROR,
+            "content": {
+                "application/json": {
+                    "example": {"detail": ErrorMessages.FORBIDDEN_ERROR},
+                },
+            },
+        },
     },
 )
 async def get_movie_by_id(

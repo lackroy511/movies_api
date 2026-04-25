@@ -16,7 +16,7 @@ class MetaDataDTO:
 @dataclass(frozen=True)
 class MovieDocDTO:
     id: str
-    creation_date: str
+    creation_date: str | None
     file_path: str | None
     title: str | None
     description: str | None

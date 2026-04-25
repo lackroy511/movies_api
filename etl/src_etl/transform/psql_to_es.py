@@ -38,7 +38,7 @@ class MoviesToElasticDataTransformer(ToElasticDataTransformer):
             )
             movie_doc = MovieDocDTO(
                 id=str(movie.id),
-                creation_date=str(movie.creation_date),
+                creation_date=str(movie.creation_date) if movie.creation_date else None,
                 file_path=movie.file_path,
                 title=movie.title,
                 description=movie.description,

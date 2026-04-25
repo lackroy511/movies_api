@@ -11,6 +11,8 @@ class MoviesListDTO:
 class MovieDTO:
     id: str
     title: str
+    creation_date: str | None
+    file_path: str | None
     description: str | None
     imdb_rating: float | None
     genres: list[str]

@@ -12,7 +12,7 @@
 Movies API функциональные тесты:
 ```
 docker compose -f movies_api/src_api/tests/functional/docker-compose.yml \
-    run --build --rm movies_api_run_tests 
+    run --build --rm movies_api_run_tests \
 && docker compose -f movies_api/src_api/tests/functional/docker-compose.yml \
     down
 ```
