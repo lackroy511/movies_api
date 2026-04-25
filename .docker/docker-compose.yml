@@ -63,7 +63,7 @@ services:
   movies_api:
     container_name: movies_api
     build:
-      context: ../api/
+      context: ../movies_api/
     command: >
       sh -c "gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8010 src_api.main:app --no-control-socket"
     env_file:
@@ -133,6 +133,25 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    <<: *common_defaults
+
+  auth_api:
+    container_name: auth_api
+    build:
+      context: ../auth_api/
+      dockerfile: Dockerfile.tests
+    image: auth_api_tests
+    command: >
+      sh -c "alembic -c /app/alembic.ini upgrade head &&
+             gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:8020 src_auth.main:app --no-control-socket"
+    env_file:
+      - ../auth_api/.env
+      - ../.env
+    depends_on:
+      auth_redis:
+        condition: service_healthy
+      auth_database:
+        condition: service_healthy
     <<: *common_defaults
 
   auth_database:

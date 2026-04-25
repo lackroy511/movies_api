@@ -10,8 +10,6 @@ class MoviesListDTO:
 @dataclass(frozen=False)
 class MovieDTO:
     id: str
-    creation_date: str | None
-    file_path: str | None
     title: str
     description: str | None
     imdb_rating: float | None
