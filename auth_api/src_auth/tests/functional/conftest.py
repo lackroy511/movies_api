@@ -40,7 +40,7 @@ def make_request(aiohttp_session: ClientSession) -> MakeRequestType:
             kwargs["params"] = params
         if data is not None:
             kwargs["json"] = data
-        if cookies:
+        if cookies is not None:
             kwargs["cookies"] = cookies
 
         async with request_method(url, **kwargs) as response:
@@ -48,7 +48,7 @@ def make_request(aiohttp_session: ClientSession) -> MakeRequestType:
             status = response.status
             cookies = response.cookies
 
-        await asyncio.sleep(0.03)
+        await asyncio.sleep(0.04)
         return body, status, cookies
 
     return inner
