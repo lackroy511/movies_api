@@ -52,7 +52,7 @@ class RoleService:
 
         updated = await self.repository.update_role(
             role_id=role_id,
-            name=name,
+            name=name.lower() if name else None,
             description=description,
         )
         if not updated:
