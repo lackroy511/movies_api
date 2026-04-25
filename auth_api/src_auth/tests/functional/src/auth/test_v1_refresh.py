@@ -35,7 +35,7 @@ async def test_refresh_success(
 @pytest.mark.parametrize(
     "cookies, expected_detail",
     [
-        (None, "Invalid or expired token"),
+        ({"refresh_token": None}, "Invalid or expired token"),
         ({"refresh_token": "invalid-token-string"}, "Invalid or expired token"),
     ],
 )

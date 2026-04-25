@@ -99,11 +99,27 @@ async def test_change_email_validation(
     make_request: MakeRequestType,
     payload: dict,
     expected_error: str,
+    clear_users_table: None,
 ) -> None:
+    register_payload = {
+        "email": "test@example.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "password": "Password123!",
+        "password_confirm": "Password123!",
+    }
+    await make_request("POST", "/v1/register", data=register_payload)
+    login_payload = {
+        "email": "test@example.com",
+        "password": "Password123!",
+    }
+    _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
+    
     body, status, _ = await make_request(
         "PATCH",
         "/v1/users/me/change-email",
         data=payload,
+        cookies=cookies,
     )
 
     assert status == 422
