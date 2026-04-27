@@ -140,7 +140,7 @@ services:
     container_name: auth_api
     build:
       context: ../auth_api/
-      dockerfile: Dockerfile.tests
+      dockerfile: Dockerfile
     image: auth_api_tests
     command: >
       sh -c "alembic -c /app/alembic.ini upgrade head &&
