@@ -1,5 +1,6 @@
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src_auth.features.users.v1.models import User
 from src_auth.tests.functional.conftest import MakeRequestType
 
@@ -41,7 +42,7 @@ async def test_get_me_unauthorized(
     body, status, _ = await make_request(
         "GET",
         "/v1/users/me",
-        cookies={"access_token": "invalid-token"},
+        cookies={test_settings.access_cookie_name: "invalid-token"},
     )
 
     assert status == 401
@@ -54,7 +55,7 @@ async def test_get_me_invalid_token(
     body, status, _ = await make_request(
         "GET",
         "/v1/users/me",
-        cookies={"access_token": "invalid-token"},
+        cookies={test_settings.access_cookie_name: "invalid-token"},
     )
 
     assert status == 401

@@ -1,4 +1,5 @@
 import pytest
+
 from src_auth.tests.functional.conftest import MakeRequestType
 
 

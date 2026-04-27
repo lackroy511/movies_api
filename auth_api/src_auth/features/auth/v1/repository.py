@@ -1,16 +1,16 @@
-from src_auth.core.exc.exceptions import UserNotFoundError
-from sqlalchemy.exc import IntegrityError
 from abc import ABC, abstractmethod
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy import insert, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.db.sql_alch import get_db_session
+from src_auth.core.exc.exceptions import UserNotFoundError
 from src_auth.features.auth.v1.dto import TokenVersionDTO
 from src_auth.features.auth.v1.models import TokenVersion
 

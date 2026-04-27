@@ -1,5 +1,7 @@
 import pytest
+
 from src_auth.tests.functional.conftest import MakeRequestType
+from src_auth.tests.functional.settings import test_settings
 
 
 async def test_refresh_success(
@@ -28,15 +30,18 @@ async def test_refresh_success(
     )
 
     assert status == 200
-    assert "access_token" in new_cookies
-    assert "refresh_token" in new_cookies
+    assert test_settings.access_cookie_name in new_cookies
+    assert test_settings.refresh_cookie_name in new_cookies
 
 
 @pytest.mark.parametrize(
     "cookies, expected_detail",
     [
-        ({"refresh_token": None}, "Invalid or expired token"),
-        ({"refresh_token": "invalid-token-string"}, "Invalid or expired token"),
+        ({test_settings.refresh_cookie_name: None}, "Invalid or expired token"),
+        (
+            {test_settings.refresh_cookie_name: "invalid-token-string"},
+            "Invalid or expired token",
+        ),
     ],
 )
 async def test_refresh_invalid_token(

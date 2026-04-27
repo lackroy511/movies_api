@@ -1,5 +1,7 @@
 import pytest
+
 from src_auth.tests.functional.conftest import MakeRequestType
+from src_auth.tests.functional.settings import test_settings
 from src_auth.tests.functional.src.roles.conftest import GetCookieType
 
 
@@ -82,7 +84,10 @@ async def test_create_role_unauthorized(
         "POST",
         "/v1/roles",
         data=payload,
-        cookies={"access_token": None, "refresh_token": None},
+        cookies={
+            test_settings.access_cookie_name: None,
+            test_settings.refresh_cookie_name: None,
+        },
     )
 
     assert status == 401

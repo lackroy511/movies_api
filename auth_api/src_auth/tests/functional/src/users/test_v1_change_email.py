@@ -1,4 +1,5 @@
 import pytest
+
 from src_auth.tests.functional.conftest import MakeRequestType
 
 
@@ -81,7 +82,7 @@ async def test_change_email_unauthorized(
         "PATCH",
         "/v1/users/me/change-email",
         data=change_payload,
-        cookies={"access_token": "invalid-token"},
+        cookies={test_settings.access_cookie_name: "invalid-token"},
     )
 
     assert status == 401

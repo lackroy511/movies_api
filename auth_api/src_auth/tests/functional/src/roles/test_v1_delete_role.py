@@ -1,11 +1,12 @@
 from uuid import uuid4
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src_auth.features.roles.v1.models import Role
 from src_auth.tests.functional.conftest import MakeRequestType
-from src_auth.tests.functional.src.roles.conftest import GetCookieType
 from src_auth.tests.functional.settings import test_settings
+from src_auth.tests.functional.src.roles.conftest import GetCookieType
 
 
 async def test_delete_role_success(
@@ -64,7 +65,10 @@ async def test_delete_role_unauthorized(
     body, status, _ = await make_request(
         "DELETE",
         f"/v1/roles/{random_id}",
-        cookies={"access_token": None, "refresh_token": None},
+        cookies={
+            test_settings.access_cookie_name: None,
+            test_settings.refresh_cookie_name: None,
+        },
     )
 
     assert status == 401

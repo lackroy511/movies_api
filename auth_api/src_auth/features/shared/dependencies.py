@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
-from src_auth.core.config.settings import RolesType
+from src_auth.core.config.settings import RolesType, settings
 from src_auth.core.exc.exceptions import (
     AccessDeniedError,
 )
@@ -32,7 +32,7 @@ async def get_current_user_payload(
         Depends(get_session_service),
     ],
 ) -> TokenPayload:
-    access_token = request.cookies.get("access_token", "wrong token")
+    access_token = request.cookies.get(settings.access_cookie_name, "wrong token")
     payload = session_service.decode_token(access_token, "access")
     await session_service.verify_session(payload, access_token)
     return payload

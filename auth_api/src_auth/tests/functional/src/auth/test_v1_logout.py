@@ -1,4 +1,5 @@
 from src_auth.tests.functional.conftest import MakeRequestType
+from src_auth.tests.functional.settings import test_settings
 
 
 async def test_logout_success(
@@ -42,7 +43,7 @@ async def test_logout_invalid_token(
     make_request: MakeRequestType,
     clear_users_table: None,
 ) -> None:
-    cookies = {"access_token": "invalid-token"}
+    cookies = {test_settings.access_cookie_name: "invalid-token"}
     body, status, _ = await make_request("POST", "/v1/logout", cookies=cookies)
 
     assert status == 401

@@ -1,10 +1,10 @@
-from src_auth.features.roles.v1.models import user_roles, Role
 from typing import AsyncGenerator
 
 from pytest_asyncio import fixture as async_fixture
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src_auth.features.roles.v1.models import Role, user_roles
 from src_auth.features.users.v1.models import User, UserAuthHistory
 from src_auth.tests.functional.settings import test_settings
 

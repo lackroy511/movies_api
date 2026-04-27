@@ -1,6 +1,6 @@
+import asyncio
 from typing import AsyncGenerator, Awaitable, Callable
 
-import asyncio
 import pytest
 import redis.asyncio as aioredis
 from aiohttp import ClientSession

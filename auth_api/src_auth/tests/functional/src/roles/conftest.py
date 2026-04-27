@@ -1,8 +1,9 @@
-from typing import Callable, Awaitable
-from src_auth.tests.functional.conftest import MakeRequestType
-from pytest_asyncio import fixture as async_fixture
-from src_auth.tests.functional.settings import test_settings
+from typing import Awaitable, Callable
 
+from pytest_asyncio import fixture as async_fixture
+
+from src_auth.tests.functional.conftest import MakeRequestType
+from src_auth.tests.functional.settings import test_settings
 
 GetCookieType = Callable[..., Awaitable[dict]]
 

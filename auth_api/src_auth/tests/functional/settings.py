@@ -1,9 +1,9 @@
-from src_auth.core.config.settings import RolesType
-from src_auth.core.config.settings import settings
 from pathlib import Path
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src_auth.core.config.settings import RolesType, settings
 
 BASE_DIR = Path(__file__).parent.parent.parent.parent
 

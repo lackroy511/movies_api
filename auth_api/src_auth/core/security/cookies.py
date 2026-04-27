@@ -5,7 +5,7 @@ from src_auth.core.config.settings import settings
 
 def set_token_cookie(response: Response, access_token: str, refresh_token: str) -> None:
     response.set_cookie(
-        key="access_token",
+        key=settings.access_cookie_name,
         value=access_token,
         httponly=True,
         samesite="lax",
@@ -13,7 +13,7 @@ def set_token_cookie(response: Response, access_token: str, refresh_token: str) 
     )
 
     response.set_cookie(
-        key="refresh_token",
+        key=settings.refresh_cookie_name,
         value=refresh_token,
         httponly=True,
         samesite="lax",

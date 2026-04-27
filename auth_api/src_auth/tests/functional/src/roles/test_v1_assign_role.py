@@ -1,5 +1,7 @@
 from uuid import uuid4
+
 from src_auth.tests.functional.conftest import MakeRequestType
+from src_auth.tests.functional.settings import test_settings
 from src_auth.tests.functional.src.roles.conftest import GetCookieType
 
 
@@ -143,7 +145,11 @@ async def test_assign_role_unauthorized(
     user_id = str(uuid4())
     path = f"/v1/roles/{role_id}/users/{user_id}"
 
-    body, status, _ = await make_request("POST", path, cookies={"access_token": None})
+    body, status, _ = await make_request(
+        "POST",
+        path,
+        cookies={test_settings.access_cookie_name: None},
+    )
 
     assert status == 401
     assert body["detail"] == "Invalid or expired token"
