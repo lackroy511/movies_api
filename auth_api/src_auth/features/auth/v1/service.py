@@ -108,20 +108,19 @@ class AuthService:
             raise InvalidTokenOrExpiredTokenError("No access token provided")
         
         payload = self.session_service.decode_token(access, "access")
-        await self.session_service.verify_session(payload, access or refresh)
+        await self.session_service.verify_session(payload, access)
         await self.session_service.blacklist_tokens(payload.user_id, access, refresh)
 
     async def logout_all_user_sessions(
         self,
         access: str | None,
-        refresh: str | None,
     ) -> None:
         if not access:
             raise InvalidTokenOrExpiredTokenError("No access token provided")
 
         payload = self.session_service.decode_token(access, "access")
         user_uuid = UUID(payload.user_id)
-        await self.session_service.verify_session(payload, access or refresh)
+        await self.session_service.verify_session(payload, access)
         await self.session_service.revoke_all_sessions(user_uuid)
 
     async def _get_user_roles(self, user_id: UUID) -> list[str]:
