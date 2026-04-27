@@ -1,4 +1,5 @@
 import logging
+
 from fastapi import FastAPI
 
 from src_api.api.router import router as main_router

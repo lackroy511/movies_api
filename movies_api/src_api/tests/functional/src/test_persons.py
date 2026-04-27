@@ -1,16 +1,16 @@
-import uuid
 import random
+import uuid
+
 import pytest
 from elasticsearch import AsyncElasticsearch
 
 from src_api.tests.functional.conftest import (
+    CreateMoviesDataType,
     CreatePersonsDataType,
     EsWriteDataType,
     MakeGetRequestType,
-    CreateMoviesDataType,
 )
 from src_api.tests.functional.settings import test_settings
-
 
 PERSONS_ENDPOINT = "/api/movies/v1/persons"
 DEFAULT_PERSONS_COUNT = 60

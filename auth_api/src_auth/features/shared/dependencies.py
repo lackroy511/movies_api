@@ -4,7 +4,8 @@ from fastapi import Depends, Request
 
 from src_auth.core.config.settings import RolesType, settings
 from src_auth.core.exc.exceptions import (
-    AccessDeniedError, InvalidTokenOrExpiredTokenError,
+    AccessDeniedError,
+    InvalidTokenOrExpiredTokenError,
 )
 from src_auth.core.security.jwt import TokenPayload
 from src_auth.features.auth.v1.service import SessionService, get_session_service

@@ -1,4 +1,3 @@
-from src_api.features.shared.types import RolesType
 from datetime import datetime
 from typing import Literal
 
@@ -6,7 +5,7 @@ import jwt
 from pydantic import BaseModel
 
 from src_api.core.config.settings import settings
-
+from src_api.features.shared.types import RolesType
 
 TokenType = Literal["access", "refresh"]
 

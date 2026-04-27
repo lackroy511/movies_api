@@ -1,5 +1,6 @@
-import uuid
 import random
+import uuid
+
 import pytest
 from elasticsearch import AsyncElasticsearch
 
@@ -9,7 +10,6 @@ from src_api.tests.functional.conftest import (
     MakeGetRequestType,
 )
 from src_api.tests.functional.settings import test_settings
-
 
 GENRES_ENDPOINT = "/api/movies/v1/genres"
 DEFAULT_GENRES_COUNT = 60

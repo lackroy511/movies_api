@@ -1,11 +1,11 @@
 import logging
+
 import elasticsearch
+from elasticsearch.exceptions import NotFoundError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from elasticsearch.exceptions import NotFoundError
-
-from src_api.core.exc.exceptions import UnauthorizedError, ForbiddenError
+from src_api.core.exc.exceptions import ForbiddenError, UnauthorizedError
 
 log = logging.getLogger(__name__)
 

@@ -1,7 +1,8 @@
-from src_api.features.shared.types import RolesType
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src_api.features.shared.types import RolesType
 
 BASE_DIR = Path(__file__).parent.parent.parent
 

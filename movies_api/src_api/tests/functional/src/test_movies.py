@@ -1,5 +1,6 @@
-import uuid
 import random
+import uuid
+
 import pytest
 from elasticsearch import AsyncElasticsearch
 
@@ -9,7 +10,6 @@ from src_api.tests.functional.conftest import (
     MakeGetRequestType,
 )
 from src_api.tests.functional.settings import test_settings
-
 
 MOVIES_ENDPOINT = "/api/movies/v1/movies"
 DEFAULT_MOVIES_COUNT = 60

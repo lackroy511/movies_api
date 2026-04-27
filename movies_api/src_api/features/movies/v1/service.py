@@ -1,19 +1,16 @@
-from src_api.core.exc.exceptions import ForbiddenError
-from src_api.core.config.settings import settings
-from src_api.features.shared.types import RolesType
 from datetime import date
 from typing import Annotated, cast
 
 from dateutil.relativedelta import relativedelta
-
-
 from fastapi import Depends
 
+from src_api.core.config.settings import settings
 from src_api.core.db.cache import (
     CacheClientInterface,
     RedisCacheClient,
     get_redis_client,
 )
+from src_api.core.exc.exceptions import ForbiddenError
 from src_api.features.movies.v1.dto import MovieDTO, MoviesListDTO
 from src_api.features.movies.v1.exceptions import MovieNotFoundError
 from src_api.features.movies.v1.repository import (
@@ -21,6 +18,7 @@ from src_api.features.movies.v1.repository import (
     MoviesRepoInterface,
     get_movies_elastic_repo,
 )
+from src_api.features.shared.types import RolesType
 
 
 class MoviesService:

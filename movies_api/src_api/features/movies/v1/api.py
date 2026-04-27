@@ -1,4 +1,3 @@
-from src_api.features.shared.dependencies import get_current_user_roles
 from dataclasses import asdict
 from typing import Annotated
 from uuid import UUID
@@ -6,11 +5,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src_api.features.movies.v1.exceptions import ErrorMessages, MovieNotFoundError
-from src_api.features.movies.v1.schemas import MovieResponse, MovieDetailResponse
+from src_api.features.movies.v1.schemas import MovieDetailResponse, MovieResponse
 from src_api.features.movies.v1.service import MoviesService, get_movies_service
+from src_api.features.shared.dependencies import get_current_user_roles
 from src_api.features.shared.query_params import PaginationParams
 from src_api.features.shared.schemas import PaginatedResponse
-from src_api.features.shared.types import SortMoviesType, RolesType
+from src_api.features.shared.types import RolesType, SortMoviesType
 
 router = APIRouter(prefix="/v1", tags=["V1 Movies"])
 

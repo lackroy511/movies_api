@@ -1,10 +1,10 @@
-from src_api.core.exc.exceptions import UnauthorizedError
-from src_api.features.shared.types import RolesType
 import jwt
-from src_api.core.security.jwt import verify_token
 from fastapi import Request
 
 from src_api.core.config.settings import settings
+from src_api.core.exc.exceptions import UnauthorizedError
+from src_api.core.security.jwt import verify_token
+from src_api.features.shared.types import RolesType
 
 
 async def get_current_user_roles(
