@@ -8,6 +8,7 @@ def set_token_cookie(response: Response, access_token: str, refresh_token: str) 
         key=settings.access_cookie_name,
         value=access_token,
         httponly=True,
+        secure=settings.cookie_secure,
         samesite="lax",
         max_age=settings.access_token_ttl,
     )
@@ -16,7 +17,8 @@ def set_token_cookie(response: Response, access_token: str, refresh_token: str) 
         key=settings.refresh_cookie_name,
         value=refresh_token,
         httponly=True,
-        samesite="lax",
+        secure=settings.cookie_secure,
+        samesite="strict",
         max_age=settings.refresh_token_ttl,
     )
 

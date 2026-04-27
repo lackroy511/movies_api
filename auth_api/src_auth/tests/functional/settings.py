@@ -31,8 +31,9 @@ class TestsSettings(BaseSettings):
     admin_email: str
     admin_password: str
     
-    access_cookie_name: str = settings.access_cookie_name
-    refresh_cookie_name: str = settings.refresh_cookie_name
+    access_cookie_name: str
+    refresh_cookie_name: str
+    cookie_secure: bool
     
     @computed_field
     @property

@@ -96,6 +96,7 @@ async def test_change_password_validation(
         "PATCH",
         "/v1/users/me/change-password",
         data=payload,
+        cookies=cookies,
     )
 
     assert status == 422

@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     
     access_cookie_name: str
     refresh_cookie_name: str
+    cookie_secure: bool
     
     @computed_field
     @property
