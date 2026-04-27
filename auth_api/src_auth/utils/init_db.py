@@ -34,6 +34,9 @@ async def create_user_roles(session: AsyncSession) -> None:
 
 
 async def create_admin_user(session: AsyncSession) -> None:
+    if len(settings.admin_password) < 12:
+        raise ValueError("Admin password must be at least 12 characters long")
+    
     query = select(Role).where(Role.name == settings.admin_role)
     result = await session.execute(query)
     admin_role = result.scalar_one_or_none()
@@ -63,5 +66,3 @@ async def create_admin_user(session: AsyncSession) -> None:
     except IntegrityError as e:
         if getattr(e.orig, "pgcode", None) == "23505":
             return
-        
-        raise e
