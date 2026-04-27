@@ -196,7 +196,7 @@ class SessionService:
     def decode_token(self, token: str, token_type: TokenType) -> TokenPayload:
         try:
             return verify_token(token, token_type)
-        except jwt.PyJWTError, ValueError:
+        except (jwt.PyJWTError, ValueError):
             raise InvalidTokenOrExpiredTokenError("Invalid or expired token") from None
 
     async def _get_token_version_from_cache(self, user_id: UUID) -> int | None:

@@ -31,5 +31,5 @@ async def get_current_user_roles(
             "access",
         )
         return payload.user_roles
-    except jwt.PyJWTError, ValueError:
+    except (jwt.PyJWTError, ValueError):
         raise UnauthorizedError("Invalid token or expired token.") from None
