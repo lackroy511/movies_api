@@ -93,7 +93,6 @@ async def logout_all(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
     access = request.cookies.get(settings.access_cookie_name)
-    refresh = request.cookies.get(settings.refresh_cookie_name)
     clear_token_cookie(response)
-    await auth_service.logout_all_user_sessions(access, refresh)
+    await auth_service.logout_all_user_sessions(access)
     return StatusResponse()
