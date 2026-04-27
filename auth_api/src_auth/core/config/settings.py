@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     admin_email: str
     admin_password: str
     
-    access_cookie_name: str = "access_token"
-    refresh_cookie_name: str = "refresh_token"
+    access_cookie_name: str
+    refresh_cookie_name: str
     
     @computed_field
     @property

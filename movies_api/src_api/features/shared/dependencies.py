@@ -4,7 +4,7 @@ import jwt
 from src_api.core.security.jwt import verify_token
 from fastapi import Request
 
-from src_auth.core.config.settings import settings
+from src_api.core.config.settings import settings
 
 
 async def get_current_user_roles(

@@ -28,5 +28,8 @@ class Settings(BaseSettings):
     subscriber_role: RolesType = "subscriber"
     non_subscriber_content_age: int = 3
     
+    access_cookie_name: str
+    refresh_cookie_name: str
+    
 
 settings = Settings()  # ty: ignore
