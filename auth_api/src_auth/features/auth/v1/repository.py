@@ -57,6 +57,10 @@ class TokenVersionRepoInterface(ABC):
     @abstractmethod
     async def get_user_token_version(self, user_id: UUID) -> TokenVersionDTO | None:
         pass
+    
+    @abstractmethod
+    async def get_or_create_token_version(self, user_id: UUID) -> TokenVersionDTO:
+        pass
 
     @abstractmethod
     async def increment_user_token_version(self, user_id: UUID) -> None:
@@ -67,6 +71,25 @@ class TokenVersionRepo(TokenVersionRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def get_or_create_token_version(self, user_id: UUID) -> TokenVersionDTO:
+        existing = await self.get_user_token_version(user_id)
+        if existing is not None:
+            return existing
+
+        try:
+            return await self.create_user_token_version(user_id)
+        except IntegrityError as e:
+            orig = getattr(e, "orig", None)
+            if not orig or not hasattr(orig, "pgcode"):
+                raise
+
+            if orig.pgcode == "23505":
+                existing = await self.get_user_token_version(user_id)
+                if existing is not None:
+                    return existing
+
+            raise
+    
     async def create_user_token_version(self, user_id: UUID) -> TokenVersionDTO:
         try:
             query = (

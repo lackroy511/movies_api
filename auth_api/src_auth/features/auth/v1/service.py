@@ -188,9 +188,7 @@ class SessionService:
         if version:
             return version
 
-        ver = await self.version_repo.get_user_token_version(user_id)
-        if not ver:
-            ver = await self.version_repo.create_user_token_version(user_id)
+        ver = await self.version_repo.get_or_create_token_version(user_id)
 
         await self._set_token_version_to_cache(user_id, ver.version)
         return ver.version
