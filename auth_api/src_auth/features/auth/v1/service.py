@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 import jwt
-from fastapi import Depends, Request, Response
+from fastapi import Depends
 
 from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
@@ -10,7 +10,6 @@ from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
 )
-from src_auth.core.security.cookies import clear_token_cookie, set_token_cookie
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
     TokenPayload,
@@ -56,16 +55,14 @@ class AuthService:
 
     async def login_user(
         self,
-        request: Request,
         email: str,
         password: str,
-        response: Response,
-    ) -> UserDTO:
+        user_agent: str,
+    ) -> tuple[UserDTO, str, str]:
         user = await self.user_service.get_user_by_email(email)
         if not verify_password(password, user.password_hash):
             raise InvalidCredentialsError("Invalid credentials")
 
-        user_agent = request.headers.get("user-agent", "Unknown user-agent")
         await self.user_service.create_auth_entry(user.id, user_agent)
 
         token_ver = await self.session_service.get_or_create_token_version(user.id)
@@ -76,12 +73,16 @@ class AuthService:
             roles,
             token_ver,
         )
-        set_token_cookie(response, new_access, new_refresh)
-        return user
+        return user, new_access, new_refresh
 
-    async def refresh_tokens(self, request: Request, response: Response) -> None:
-        access = request.cookies.get(settings.access_cookie_name)
-        refresh = request.cookies.get(settings.refresh_cookie_name, "wrong token")
+    async def refresh_tokens(
+        self,
+        access: str | None,
+        refresh: str | None,
+    ) -> tuple[str, str]:
+        if not refresh:
+            raise InvalidTokenOrExpiredTokenError("Refresh token is missing")
+
         payload = self.session_service.decode_token(refresh, "refresh")
 
         user_uuid = UUID(payload.user_id)
@@ -96,34 +97,26 @@ class AuthService:
             roles,
             actual_ver,
         )
-        set_token_cookie(response, new_access, new_refresh)
+        return new_access, new_refresh
 
-    async def logout_user(self, request: Request, response: Response) -> None:
-        access = request.cookies.get(settings.access_cookie_name)
-        refresh = request.cookies.get(settings.refresh_cookie_name, "wrong token")
+    async def logout_user(self, access: str | None, refresh: str | None) -> None:
         try:
             payload = self.session_service.decode_token(access or "", "access")
         except InvalidTokenOrExpiredTokenError:
-            payload = self.session_service.decode_token(refresh, "refresh")
-        finally:
-            clear_token_cookie(response)
+            payload = self.session_service.decode_token(refresh or "", "refresh")
 
         await self.session_service.verify_session(payload, access or refresh)
         await self.session_service.blacklist_tokens(payload.user_id, access, refresh)
 
     async def logout_all_user_sessions(
         self,
-        request: Request,
-        response: Response,
+        access: str | None,
+        refresh: str | None,
     ) -> None:
-        access = request.cookies.get(settings.access_cookie_name)
-        refresh = request.cookies.get(settings.refresh_cookie_name, "wrong token")
         try:
             payload = self.session_service.decode_token(access or "", "access")
         except InvalidTokenOrExpiredTokenError:
-            payload = self.session_service.decode_token(refresh, "refresh")
-        finally:
-            clear_token_cookie(response)
+            payload = self.session_service.decode_token(refresh or "", "refresh")
 
         user_uuid = UUID(payload.user_id)
         await self.session_service.verify_session(payload, access or refresh)

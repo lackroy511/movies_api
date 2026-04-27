@@ -2,6 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
+from src_auth.core.config.settings import settings
+from src_auth.core.security.cookies import clear_token_cookie, set_token_cookie
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     RegisterRequest,
@@ -39,12 +41,13 @@ async def login(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     response: Response,
 ) -> UserResponse:
-    logged_user = await auth_service.login_user(
-        request=request,
+    user_agent = request.headers.get("user-agent", "Unknown user-agent")
+    logged_user, access, refresh = await auth_service.login_user(
         email=login_data.email,
         password=login_data.password,
-        response=response,
+        user_agent=user_agent,
     )
+    set_token_cookie(response, access, refresh)
     return UserResponse.model_validate(logged_user)
 
 
@@ -57,7 +60,10 @@ async def refresh(
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
-    await auth_service.refresh_tokens(request, response)
+    access = request.cookies.get(settings.access_cookie_name)
+    refresh = request.cookies.get(settings.refresh_cookie_name)
+    new_access, new_refresh = await auth_service.refresh_tokens(access, refresh)
+    set_token_cookie(response, new_access, new_refresh)
     return StatusResponse()
 
 
@@ -70,7 +76,10 @@ async def logout(
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
-    await auth_service.logout_user(request, response)
+    access = request.cookies.get(settings.access_cookie_name)
+    refresh = request.cookies.get(settings.refresh_cookie_name)
+    clear_token_cookie(response)
+    await auth_service.logout_user(access, refresh)
     return StatusResponse()
 
 
@@ -83,5 +92,8 @@ async def logout_all(
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
-    await auth_service.logout_all_user_sessions(request, response)
+    access = request.cookies.get(settings.access_cookie_name)
+    refresh = request.cookies.get(settings.refresh_cookie_name)
+    clear_token_cookie(response)
+    await auth_service.logout_all_user_sessions(access, refresh)
     return StatusResponse()

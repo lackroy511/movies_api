@@ -1,6 +1,7 @@
 import pytest
 
 from src_auth.tests.functional.conftest import MakeRequestType
+from src_auth.tests.functional.settings import test_settings
 
 
 async def test_change_email_success(
