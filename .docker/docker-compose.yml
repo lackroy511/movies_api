@@ -34,6 +34,7 @@ services:
       - media_volume:/app/media
     env_file:
       - ../admin_panel/.env
+      - ../.env
     depends_on:
       movies_database:
         condition: service_healthy
