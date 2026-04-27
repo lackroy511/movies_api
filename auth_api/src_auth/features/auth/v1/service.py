@@ -99,12 +99,15 @@ class AuthService:
         )
         return new_access, new_refresh
 
-    async def logout_user(self, access: str | None, refresh: str | None) -> None:
-        try:
-            payload = self.session_service.decode_token(access or "", "access")
-        except InvalidTokenOrExpiredTokenError:
-            payload = self.session_service.decode_token(refresh or "", "refresh")
-
+    async def logout_user(
+        self,
+        access: str | None,
+        refresh: str | None,
+    ) -> None:
+        if not access:
+            raise InvalidTokenOrExpiredTokenError("No access token provided")
+        
+        payload = self.session_service.decode_token(access, "access")
         await self.session_service.verify_session(payload, access or refresh)
         await self.session_service.blacklist_tokens(payload.user_id, access, refresh)
 
@@ -113,11 +116,10 @@ class AuthService:
         access: str | None,
         refresh: str | None,
     ) -> None:
-        try:
-            payload = self.session_service.decode_token(access or "", "access")
-        except InvalidTokenOrExpiredTokenError:
-            payload = self.session_service.decode_token(refresh or "", "refresh")
+        if not access:
+            raise InvalidTokenOrExpiredTokenError("No access token provided")
 
+        payload = self.session_service.decode_token(access, "access")
         user_uuid = UUID(payload.user_id)
         await self.session_service.verify_session(payload, access or refresh)
         await self.session_service.revoke_all_sessions(user_uuid)
@@ -196,7 +198,7 @@ class SessionService:
     def decode_token(self, token: str, token_type: TokenType) -> TokenPayload:
         try:
             return verify_token(token, token_type)
-        except (jwt.PyJWTError, ValueError):
+        except jwt.PyJWTError, ValueError:
             raise InvalidTokenOrExpiredTokenError("Invalid or expired token") from None
 
     async def _get_token_version_from_cache(self, user_id: UUID) -> int | None:
