@@ -1,6 +1,8 @@
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends
+
+from fastapi.security import APIKeyCookie
 
 from src_auth.core.config.settings import RolesType, settings
 from src_auth.core.exc.exceptions import (
@@ -9,6 +11,16 @@ from src_auth.core.exc.exceptions import (
 )
 from src_auth.core.security.jwt import TokenPayload
 from src_auth.features.auth.v1.service import SessionService, get_session_service
+
+
+access_cookie_scheme = APIKeyCookie(
+    name=settings.access_cookie_name,
+    auto_error=False,
+)
+refresh_cookie_scheme = APIKeyCookie(
+    name=settings.refresh_cookie_name,
+    auto_error=False,
+)
 
 
 class RequireRole:
@@ -27,16 +39,27 @@ class RequireRole:
 
 
 async def get_current_user_payload(
-    request: Request,
+    access_token: Annotated[str | None, Depends(access_cookie_scheme)],
     session_service: Annotated[
         SessionService,
         Depends(get_session_service),
     ],
 ) -> TokenPayload:
-    access_token = request.cookies.get(settings.access_cookie_name)
     if not access_token:
         raise InvalidTokenOrExpiredTokenError("Access token not found")
-    
+
     payload = session_service.decode_token(access_token, "access")
     await session_service.verify_session(payload, access_token)
     return payload
+
+
+async def get_access_token(
+    access_token: Annotated[str | None, Depends(access_cookie_scheme)],
+) -> str | None:
+    return access_token
+
+
+async def get_refresh_token(
+    refresh_token: Annotated[str | None, Depends(refresh_cookie_scheme)],
+) -> str | None:
+    return refresh_token

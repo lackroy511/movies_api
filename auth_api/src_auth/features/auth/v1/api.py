@@ -1,3 +1,4 @@
+from src_auth.features.shared.dependencies import get_access_token, get_refresh_token
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -72,14 +73,13 @@ async def refresh(
     responses={401: {"model": ErrorResponse}},
 )
 async def logout(
-    request: Request,
+    access_token: Annotated[str | None, Depends(get_access_token)],
+    refresh_token: Annotated[str | None, Depends(get_refresh_token)],
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
-    access = request.cookies.get(settings.access_cookie_name)
-    refresh = request.cookies.get(settings.refresh_cookie_name)
+    await auth_service.logout_user(access_token, refresh_token)
     clear_token_cookie(response)
-    await auth_service.logout_user(access, refresh)
     return StatusResponse()
 
 
@@ -88,11 +88,10 @@ async def logout(
     responses={401: {"model": ErrorResponse}},
 )
 async def logout_all(
-    request: Request,
+    access_token: Annotated[str | None, Depends(get_access_token)],
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
-    access = request.cookies.get(settings.access_cookie_name)
+    await auth_service.logout_all_user_sessions(access_token)
     clear_token_cookie(response)
-    await auth_service.logout_all_user_sessions(access)
     return StatusResponse()
