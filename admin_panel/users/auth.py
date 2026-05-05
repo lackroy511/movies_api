@@ -30,7 +30,7 @@ class TokenPayload(BaseModel):
 
 
 class CustomAuthBackend(BaseBackend):
-    def authenticate(self, request: HttpRequest, **kwargs: str | None) -> User | None:
+    def authenticate(self, request: HttpRequest, **kwargs: str | None) -> User | None:  # ty: ignore
         email = kwargs.get("username")
         password = kwargs.get("password")
 
@@ -65,7 +65,7 @@ class CustomAuthBackend(BaseBackend):
 
         return user
 
-    def get_user(self, user_id: UUID) -> User | None:
+    def get_user(self, user_id: UUID) -> User | None:  # ty: ignore
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
