@@ -12,6 +12,14 @@ from django.http import HttpRequest
 
 import jwt
 
+from utils.backoff import Backoff
+
+
+RETRY_EXCEPTIONS = (
+    requests.exceptions.Timeout,
+    requests.exceptions.ConnectionError,
+)
+
 
 User = get_user_model()
 
@@ -30,6 +38,7 @@ class TokenPayload(BaseModel):
 
 
 class CustomAuthBackend(BaseBackend):
+    @Backoff(RETRY_EXCEPTIONS)
     def authenticate(self, request: HttpRequest, **kwargs: str | None) -> User | None:  # ty: ignore
         email = kwargs.get("username")
         password = kwargs.get("password")
@@ -60,7 +69,7 @@ class CustomAuthBackend(BaseBackend):
                     "is_superuser": settings.SUPERUSER_ROLE in user_roles,
                 },
             )
-        except (KeyError, User.DoesNotExist):
+        except KeyError, User.DoesNotExist:
             return None
 
         return user
