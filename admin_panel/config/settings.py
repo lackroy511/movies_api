@@ -20,3 +20,5 @@ INTERNAL_IPS = [
 ROOT_URLCONF = "config.urls"
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+AUTH_API_LOGIN_URL = os.getenv("AUTH_API_LOGIN_URL")
