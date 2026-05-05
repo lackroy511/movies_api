@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent.parent.parent
 
-RolesType = Literal["admin", "subscriber"]
+RolesType = Literal["superuser", "staff", "subscriber"]
 
 
 class Settings(BaseSettings):
@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     
     secret_key: str
     
-    default_user_roles: list[RolesType] = ["admin", "subscriber"]
-    admin_role: RolesType = "admin"
+    default_user_roles: list[RolesType] = ["superuser", "staff", "subscriber"]
+    admin_role: RolesType = "superuser"
     
     admin_email: str
     admin_password: str

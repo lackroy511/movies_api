@@ -12,4 +12,4 @@ class DataclassType(Protocol):
     __dataclass_fields__: dict
 
 
-RolesType = Literal["admin", "subscriber"]
+RolesType = Literal["superuser", "staff", "subscriber"]

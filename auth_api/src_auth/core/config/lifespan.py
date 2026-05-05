@@ -26,6 +26,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         
         yield
     finally:
+        log.info("Auth API is shutting down...")
         await redis_client.close()
         await sql_alch_engine.dispose()
-        log.info("Auth API is shutting down...")

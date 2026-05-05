@@ -1,2 +1,0 @@
-CREATE SCHEMA content;
-CREATE SCHEMA users;
