@@ -35,7 +35,11 @@ def make_request(aiohttp_session: ClientSession) -> MakeRequestType:
         if request_method is None:
             raise ValueError(f"Unsupported HTTP method: {method}")
 
-        kwargs = {}
+        kwargs = {
+            "headers": {
+                "X-Request-Id": "Test-Request-ID-1234567890",
+            },
+        }
         if params:
             kwargs["params"] = params
         if data is not None:
