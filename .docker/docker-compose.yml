@@ -7,6 +7,7 @@ x-common-defaults: &common_defaults
       max-file: "2"
 
 services:
+# ------------------------------------ nginx ------------------------------------
   nginx:
     image: nginx:1.29.5
     container_name: movies_nginx
@@ -21,13 +22,14 @@ services:
       - 80:80
     <<: *common_defaults
 
+
+# -------------------------------- movies_admin ---------------------------------
   movies_django:
     container_name: movies_django
     build:
       context: ../admin_panel/
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py createsuperuser --no-input || true &&
              gunicorn --chdir /app config.wsgi:application --workers 2 --timeout 300 --bind 0.0.0.0:8000 --no-control-socket"
     volumes:
       - static_volume:/app/staticfiles
@@ -42,6 +44,22 @@ services:
         condition: service_healthy
     <<: *common_defaults
 
+  movies_database:
+    image: postgres:17
+    container_name: movies_database
+    env_file:
+      - ../admin_panel/.env
+    volumes:
+      - movies_database:/var/lib/postgresql/data
+      - ../.docker/movies_psql_init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    <<: *common_defaults
+
+# --------------------------------- movies_etl ----------------------------------
   movies_etl:
     container_name: movies_etl
     build:
@@ -61,6 +79,7 @@ services:
         condition: service_started
     <<: *common_defaults
 
+# --------------------------------- movies_api ----------------------------------
   movies_api:
     container_name: movies_api
     build:
@@ -75,21 +94,6 @@ services:
         condition: service_healthy
       movies_redis:
         condition: service_healthy
-    <<: *common_defaults
-
-  movies_database:
-    image: postgres:17
-    container_name: movies_database
-    env_file:
-      - ../admin_panel/.env
-    volumes:
-      - movies_database:/var/lib/postgresql/data
-      - ../.docker/movies_psql_init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     <<: *common_defaults
 
   movies_elastic:
@@ -136,6 +140,7 @@ services:
       retries: 5
     <<: *common_defaults
 
+# ---------------------------------- auth_api -----------------------------------
   auth_api:
     container_name: auth_api
     build:
@@ -180,10 +185,53 @@ services:
       retries: 5
     <<: *common_defaults
 
+# ----------------------------------- Jaeger ------------------------------------
+  jaeger_elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+    container_name: jaeger_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - jaeger_es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    <<: *common_defaults
+
+  jaeger-collector:
+    image: jaegertracing/jaeger-collector:1.76.0
+    container_name: jaeger-collector
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://jaeger_elasticsearch:9200
+      - COLLECTOR_OTLP_ENABLED=true
+    depends_on:
+      jaeger_elasticsearch:
+        condition: service_healthy
+    <<: *common_defaults
+
+  jaeger-query:
+    image: jaegertracing/jaeger-query:1.76.0
+    container_name: jaeger-query
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://jaeger_elasticsearch:9200
+    ports:
+      - 16686:16686
+    depends_on:
+      jaeger_elasticsearch:
+        condition: service_healthy
+    <<: *common_defaults
+
 volumes:
   movies_database:
   static_volume:
   media_volume:
   esdata:
+  jaeger_es_data:
   etl_logs:
   auth_database:

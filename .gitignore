@@ -121,3 +121,5 @@ state/
 .devcontainer
 
 *.dev
+
+.pgpass

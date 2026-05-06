@@ -5,6 +5,7 @@ import logging
 from fastapi import FastAPI, Request, status, Response
 
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry import trace
 
 from src_auth.api.router import router as main_router
 from src_auth.core.config.lifespan import lifespan
@@ -34,10 +35,11 @@ async def before_request(request: Request, call_next: Callable) -> Response:
             content={"detail": "X-Request-Id is required"},
         )
 
+    span = trace.get_current_span()
+    span.set_attribute("http.request_id", request_id)
     return await call_next(request)
 
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("main:app", host="0.0.0.0", port=8020)

@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     refresh_cookie_name: str
     cookie_secure: bool
     
+    jaeger_service_name: str
+    jaeger_tracer_path: str
+    
     @computed_field
     @property
     def db_url(self) -> str:
