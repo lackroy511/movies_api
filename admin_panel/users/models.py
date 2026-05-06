@@ -19,7 +19,10 @@ class MyUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email: str, password: str | None = None) -> User:
-        user = self.create_user(email, password=password)
+        user = self.create_user(
+            email,
+            password=password,
+        )
         user.is_active = True
         user.is_staff = True
         user.is_superuser = True
@@ -29,7 +32,7 @@ class MyUserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     password = None
-    
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -68,7 +71,7 @@ class User(AbstractBaseUser):
     updated_at = models.DateTimeField(
         auto_now=True,
     )
-    
+
     USERNAME_FIELD = "email"
 
     objects = MyUserManager()

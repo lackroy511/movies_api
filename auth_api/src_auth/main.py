@@ -1,6 +1,10 @@
+from typing import Callable
+from fastapi.responses import JSONResponse
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status, Response
+
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from src_auth.api.router import router as main_router
 from src_auth.core.config.lifespan import lifespan
@@ -17,9 +21,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(main_router)
-
 register_exception_handlers(app)
+FastAPIInstrumentor.instrument_app(app)
+
+
+@app.middleware("http")
+async def before_request(request: Request, call_next: Callable) -> Response:
+    request_id = request.headers.get("X-Request-Id")
+    if not request_id:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": "X-Request-Id is required"},
+        )
+
+    return await call_next(request)
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8020)
