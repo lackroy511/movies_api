@@ -9,8 +9,8 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True) 
     
     id: UUID
-    email: str
-    first_name: str
+    email: str | None
+    first_name: str | None
     last_name: str | None
     is_active: bool
     created_at: datetime

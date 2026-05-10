@@ -11,8 +11,8 @@ from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.db.sql_alch import get_db_session
 from src_auth.core.exc.exceptions import UserNotFoundError
-from src_auth.features.auth.v1.dto import TokenVersionDTO
-from src_auth.features.auth.v1.models import TokenVersion
+from src_auth.features.auth.v1.dto import TokenVersionDTO, OAuthAccountDTO
+from src_auth.features.auth.v1.models import TokenVersion, OauthAccount
 
 
 class TokenBlacklistRepoInterface(ABC):
@@ -57,7 +57,7 @@ class TokenVersionRepoInterface(ABC):
     @abstractmethod
     async def get_user_token_version(self, user_id: UUID) -> TokenVersionDTO | None:
         pass
-    
+
     @abstractmethod
     async def get_or_create_token_version(self, user_id: UUID) -> TokenVersionDTO:
         pass
@@ -89,7 +89,7 @@ class TokenVersionRepo(TokenVersionRepoInterface):
                     return existing
 
             raise
-    
+
     async def create_user_token_version(self, user_id: UUID) -> TokenVersionDTO:
         try:
             query = (
@@ -128,6 +128,63 @@ class TokenVersionRepo(TokenVersionRepoInterface):
         await self.session.execute(query)
 
 
+class OAuthAccountRepoInterface(ABC):
+    @abstractmethod
+    async def create_oauth_account(self, account: OAuthAccountDTO) -> OAuthAccountDTO:
+        pass
+
+    @abstractmethod
+    async def get_oauth_account(
+        self,
+        provider: str,
+        provider_user_id: str,
+    ) -> OAuthAccountDTO | None:
+        pass
+
+
+class OAuthAccountRepo(OAuthAccountRepoInterface):
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def create_oauth_account(self, account: OAuthAccountDTO) -> OAuthAccountDTO:
+        query = (
+            insert(OauthAccount)
+            .values(
+                user_id=account.user_id,
+                provider=account.provider,
+                provider_user_id=account.provider_user_id,
+            )
+            .returning(OauthAccount)
+        )
+        result = await self.session.execute(query)
+        created = result.scalar_one()
+        return OAuthAccountDTO(
+            user_id=created.user_id,
+            provider=created.provider,
+            provider_user_id=created.provider_user_id,
+        )
+
+    async def get_oauth_account(
+        self,
+        provider: str,
+        provider_user_id: str,
+    ) -> OAuthAccountDTO | None:
+        query = select(OauthAccount).where(
+            OauthAccount.provider == provider,
+            OauthAccount.provider_user_id == provider_user_id,
+        )
+        result = await self.session.execute(query)
+        oauth_account = result.scalar_one_or_none()
+        if oauth_account is None:
+            return None
+
+        return OAuthAccountDTO(
+            user_id=oauth_account.user_id,
+            provider=oauth_account.provider,
+            provider_user_id=oauth_account.provider_user_id,
+        )
+
+
 async def get_version_token_repository(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> TokenVersionRepoInterface:
@@ -138,3 +195,9 @@ async def get_blacklist_token_repository(
     cache_client: Annotated[CacheClientInterface, Depends(get_redis_client)],
 ) -> TokenBlacklistRepoInterface:
     return TokenBlacklistRepo(cache_client)
+
+
+async def get_oauth_account_repository(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> OAuthAccountRepoInterface:
+    return OAuthAccountRepo(session)

@@ -14,9 +14,11 @@ class User(Base):
         String,
         unique=True,
         index=True,
+        nullable=True,
     )
     first_name: Mapped[str] = mapped_column(
         String,
+        nullable=True,
     )
     last_name: Mapped[str] = mapped_column(
         String,

@@ -19,3 +19,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=4, max_length=100)
+
+
+class OAuthLoginURLResponse(BaseModel):
+    url: str

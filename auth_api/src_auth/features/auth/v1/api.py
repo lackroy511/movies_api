@@ -1,4 +1,6 @@
-from typing import Annotated
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
+from fastapi_sso import OpenID
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_sso.sso.yandex import YandexSSO
@@ -9,8 +11,12 @@ from src_auth.core.security.sso import get_yandex_sso
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     RegisterRequest,
+    OAuthLoginURLResponse,
 )
-from src_auth.features.auth.v1.service import AuthService, get_auth_service
+from src_auth.features.auth.v1.service import (
+    AuthService,
+    get_auth_service,
+)
 from src_auth.features.shared.dependencies import get_access_token, get_refresh_token
 from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 
@@ -101,13 +107,10 @@ async def logout_all(
 
 @router.get("/login/yandex-url")
 async def get_login_yandex_url(
-    yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-) -> dict:
-    async with yandex_sso:
-        url = await yandex_sso.get_login_url()
-
-    return {"url": url}
+) -> OAuthLoginURLResponse:
+    url = await auth_service.get_oauth_login_url(provider="yandex")
+    return OAuthLoginURLResponse(url=url)
 
 
 @router.get("/login/yandex/callback")
@@ -116,11 +119,29 @@ async def login_yandex_callback(
     yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     response: Response,
-) -> dict:
-    async with yandex_sso:
-        openid = await yandex_sso.verify_and_process(request)
-
+) -> UserResponse:
+    yandex_provider = "yandex"
+    # TODO: Вынести в Depends, Refactor
+    try:
+        async with yandex_sso:
+            openid = cast(OpenID, await yandex_sso.verify_and_process(request))
+    except InvalidGrantError:
+        raise HTTPException(status_code=401, detail="Authentication failed") from None
+    
     if not openid:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid openid")
 
-    return {"openid": str(openid)}
+    if openid.provider != yandex_provider or not openid.id:
+        raise HTTPException(status_code=401, detail="Invalid provider")
+
+    user_agent = request.headers.get("user-agent", "Unknown user-agent")
+    logged_user, access, refresh = await auth_service.oauth_login_user(
+        email=openid.email,
+        first_name=openid.first_name,
+        last_name=openid.last_name,
+        provider=yandex_provider,
+        provider_user_id=openid.id,
+        user_agent=user_agent,
+    )
+    set_token_cookie(response, access, refresh)
+    return UserResponse.model_validate(logged_user)

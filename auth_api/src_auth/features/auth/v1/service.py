@@ -1,4 +1,5 @@
-from typing import Annotated
+from src_auth.features.auth.v1.dto import OAuthAccountDTO
+from typing import Annotated, Literal, Callable
 from uuid import UUID
 
 import jwt
@@ -10,6 +11,7 @@ from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
+    UserNotFoundError,
 )
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
@@ -24,10 +26,15 @@ from src_auth.features.auth.v1.repository import (
     TokenVersionRepoInterface,
     get_blacklist_token_repository,
     get_version_token_repository,
+    OAuthAccountRepoInterface,
+    get_oauth_account_repository,
 )
 from src_auth.features.roles.v1.service import RoleService, get_role_service
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
+
+
+OAuthProviderType = Literal["yandex"]
 
 
 class AuthService:
@@ -38,6 +45,7 @@ class AuthService:
         user_service: UserService,
         role_service: RoleService,
     ) -> None:
+        self.oauth_service = oauth_service
         self.session_service = session_service
         self.user_service = user_service
         self.role_service = role_service
@@ -56,6 +64,70 @@ class AuthService:
             password=password,
         )
 
+    async def get_oauth_login_url(
+        self,
+        provider: OAuthProviderType,
+    ) -> str:
+        url_provider_mapping: dict[OAuthProviderType, Callable] = {
+            "yandex": self.oauth_service.get_yandex_login_url,
+        }
+        return await url_provider_mapping[provider]()
+
+    async def oauth_login_user(
+        self,
+        email: str | None,
+        first_name: str | None,
+        last_name: str | None,
+        provider: OAuthProviderType,
+        provider_user_id: str,
+        user_agent: str,
+    ) -> tuple[UserDTO, str, str]:
+        oauth_account = await self.oauth_service.get_oauth_user_account(
+            provider=provider,
+            provider_user_id=provider_user_id,
+        )
+        # TODO: Refactor
+        if oauth_account:
+            user = await self.user_service.get_user_by_id(oauth_account.user_id)
+        elif email:
+            try:
+                user = await self.user_service.get_user_by_email(email)
+                await self.oauth_service.create_oauth_account(
+                    user_id=user.id,
+                    provider=provider,
+                    provider_user_id=provider_user_id,
+                )
+            except UserNotFoundError:
+                user = await self.user_service.create_user(
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=None,
+                )
+        else:
+            user = await self.user_service.create_user(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password=None,
+            )
+            await self.oauth_service.create_oauth_account(
+                user_id=user.id,
+                provider=provider,
+                provider_user_id=provider_user_id,
+            )
+
+        await self.user_service.create_auth_entry(user.id, user_agent)
+        token_ver = await self.session_service.get_or_create_token_version(user.id)
+        roles = await self._get_user_roles(user.id)
+        access, refresh = await self.session_service.create_session_tokens(
+            user.id,
+            roles,
+            token_ver,
+        )
+
+        return user, access, refresh
+
     async def login_user(
         self,
         email: str,
@@ -71,12 +143,12 @@ class AuthService:
         token_ver = await self.session_service.get_or_create_token_version(user.id)
         roles = await self._get_user_roles(user.id)
 
-        new_access, new_refresh = await self.session_service.create_session_tokens(
+        access, refresh = await self.session_service.create_session_tokens(
             user.id,
             roles,
             token_ver,
         )
-        return user, new_access, new_refresh
+        return user, access, refresh
 
     async def refresh_tokens(
         self,
@@ -225,14 +297,37 @@ class OAuthService:
     def __init__(
         self,
         yandex_sso: YandexSSO,
+        oauth_repo: OAuthAccountRepoInterface,
     ) -> None:
         self.yandex_sso = yandex_sso
+        self.oauth_repo = oauth_repo
 
-    def get_login_url(self) -> str:
-        return ""
+    async def get_yandex_login_url(self) -> str:
+        async with self.yandex_sso:
+            return await self.yandex_sso.get_login_url()
 
-    def process_callback(self, code: str) -> dict:
-        return {}
+    async def create_oauth_account(
+        self,
+        user_id: UUID,
+        provider: str,
+        provider_user_id: str,
+    ) -> OAuthAccountDTO:
+        new_oauth_account = OAuthAccountDTO(
+            user_id=user_id,
+            provider=provider,
+            provider_user_id=provider_user_id,
+        )
+        return await self.oauth_repo.create_oauth_account(new_oauth_account)
+
+    async def get_oauth_user_account(
+        self,
+        provider: str,
+        provider_user_id: str,
+    ) -> OAuthAccountDTO | None:
+        return await self.oauth_repo.get_oauth_account(
+            provider=provider,
+            provider_user_id=provider_user_id,
+        )
 
 
 async def get_auth_service(
@@ -272,5 +367,9 @@ async def get_session_service(
 
 async def get_oauth_service(
     yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
+    oauth_repo: Annotated[
+        OAuthAccountRepoInterface,
+        Depends(get_oauth_account_repository),
+    ],
 ) -> OAuthService:
-    return OAuthService(yandex_sso)
+    return OAuthService(yandex_sso, oauth_repo)
