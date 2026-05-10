@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     jaeger_service_name: str
     jaeger_tracer_path: str
     
+    allow_insecure_sso_http: bool
+    yandex_client_id: str
+    yandex_client_secret: str
+    yandex_redirect_uri: str
+    
     @computed_field
     @property
     def db_url(self) -> str:

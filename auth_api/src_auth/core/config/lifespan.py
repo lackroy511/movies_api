@@ -4,8 +4,8 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-from src_auth.core.config.tracer import configure_tracer
 from src_auth.core.config.logger import configure_logging
+from src_auth.core.config.tracer import configure_tracer
 from src_auth.core.db.cache import client as redis_client
 from src_auth.core.db.sql_alch import engine as sql_alch_engine
 from src_auth.core.db.sql_alch import sessionmaker

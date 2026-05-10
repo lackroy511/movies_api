@@ -1,11 +1,10 @@
-from typing import Callable
-from fastapi.responses import JSONResponse
 import logging
+from typing import Callable
 
-from fastapi import FastAPI, Request, status, Response
-
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from fastapi import FastAPI, Request, Response, status
+from fastapi.responses import JSONResponse
 from opentelemetry import trace
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from src_auth.api.router import router as main_router
 from src_auth.core.config.lifespan import lifespan

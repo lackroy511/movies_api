@@ -1,15 +1,17 @@
-from src_auth.features.shared.dependencies import get_access_token, get_refresh_token
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi_sso.sso.yandex import YandexSSO
 
 from src_auth.core.config.settings import settings
 from src_auth.core.security.cookies import clear_token_cookie, set_token_cookie
+from src_auth.core.security.sso import get_yandex_sso
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     RegisterRequest,
 )
 from src_auth.features.auth.v1.service import AuthService, get_auth_service
+from src_auth.features.shared.dependencies import get_access_token, get_refresh_token
 from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
@@ -95,3 +97,30 @@ async def logout_all(
     await auth_service.logout_all_user_sessions(access_token)
     clear_token_cookie(response)
     return StatusResponse()
+
+
+@router.get("/login/yandex-url")
+async def get_login_yandex_url(
+    yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> dict:
+    async with yandex_sso:
+        url = await yandex_sso.get_login_url()
+
+    return {"url": url}
+
+
+@router.get("/login/yandex/callback")
+async def login_yandex_callback(
+    request: Request,
+    yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    response: Response,
+) -> dict:
+    async with yandex_sso:
+        openid = await yandex_sso.verify_and_process(request)
+
+    if not openid:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    return {"openid": str(openid)}

@@ -3,6 +3,7 @@ from uuid import UUID
 
 import jwt
 from fastapi import Depends
+from fastapi_sso.sso.yandex import YandexSSO
 
 from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
@@ -17,6 +18,7 @@ from src_auth.core.security.jwt import (
     create_token,
     verify_token,
 )
+from src_auth.core.security.sso import get_yandex_sso
 from src_auth.features.auth.v1.repository import (
     TokenBlacklistRepoInterface,
     TokenVersionRepoInterface,
@@ -31,6 +33,7 @@ from src_auth.features.users.v1.service import UserService, get_user_service
 class AuthService:
     def __init__(
         self,
+        oauth_service: OAuthService,
         session_service: SessionService,
         user_service: UserService,
         role_service: RoleService,
@@ -106,7 +109,7 @@ class AuthService:
     ) -> None:
         if not access:
             raise InvalidTokenOrExpiredTokenError("No access token provided")
-        
+
         payload = self.session_service.decode_token(access, "access")
         await self.session_service.verify_session(payload, access)
         await self.session_service.blacklist_tokens(payload.user_id, access, refresh)
@@ -195,7 +198,7 @@ class SessionService:
     def decode_token(self, token: str, token_type: TokenType) -> TokenPayload:
         try:
             return verify_token(token, token_type)
-        except (jwt.PyJWTError, ValueError):
+        except jwt.PyJWTError, ValueError:
             raise InvalidTokenOrExpiredTokenError("Invalid or expired token") from None
 
     async def _get_token_version_from_cache(self, user_id: UUID) -> int | None:
@@ -218,12 +221,28 @@ class SessionService:
         await self.cache_client.delete_cache(cache_key)
 
 
+class OAuthService:
+    def __init__(
+        self,
+        yandex_sso: YandexSSO,
+    ) -> None:
+        self.yandex_sso = yandex_sso
+
+    def get_login_url(self) -> str:
+        return ""
+
+    def process_callback(self, code: str) -> dict:
+        return {}
+
+
 async def get_auth_service(
+    oauth_service: Annotated[OAuthService, Depends(get_oauth_service)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
     user_service: Annotated[UserService, Depends(get_user_service)],
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> AuthService:
     return AuthService(
+        oauth_service=oauth_service,
         session_service=session_service,
         user_service=user_service,
         role_service=role_service,
@@ -249,3 +268,9 @@ async def get_session_service(
         version_repo=version_repo,
         cache_client=cache_client,
     )
+
+
+async def get_oauth_service(
+    yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
+) -> OAuthService:
+    return OAuthService(yandex_sso)

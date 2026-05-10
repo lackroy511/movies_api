@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import Depends
-
 from fastapi.security import APIKeyCookie
 
 from src_auth.core.config.settings import RolesType, settings
@@ -11,7 +10,6 @@ from src_auth.core.exc.exceptions import (
 )
 from src_auth.core.security.jwt import TokenPayload
 from src_auth.features.auth.v1.service import SessionService, get_session_service
-
 
 access_cookie_scheme = APIKeyCookie(
     name=settings.access_cookie_name,

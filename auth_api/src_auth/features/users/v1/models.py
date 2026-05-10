@@ -24,6 +24,7 @@ class User(Base):
     )
     password_hash: Mapped[str] = mapped_column(
         Text,
+        nullable=True,
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
