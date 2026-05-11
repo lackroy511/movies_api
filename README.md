@@ -11,6 +11,7 @@
 - http://127.0.0.1/admin/ - Админка
 - http://127.0.0.1/api/auth/doc/ - OpenAPI Auth API
 - http://127.0.0.1/api/movies/doc/ - OpenAPI Movies API
+- http://192.168.1.190:16686/search - Jaeger UI
 * [Документация Auth API.](auth_api/README.md)
 * [Документация Movies API](movies_api/README.md)
 
