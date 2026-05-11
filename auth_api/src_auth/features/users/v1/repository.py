@@ -28,6 +28,10 @@ class UserRepoInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_or_create(self, user: CreateUserDTO) -> UserDTO:
+        pass
+
+    @abstractmethod
     async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
         pass
 
@@ -52,6 +56,15 @@ class UserRepo(UserRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def get_or_create(self, user: CreateUserDTO) -> UserDTO:
+        try:
+            return await self.create(user)
+        except UserAlreadyExistsError:
+            query = select(User).where(User.email == user.email)
+            result = await self.session.execute(query)
+            existing = result.scalar_one()
+            return self._transform_user_to_dto(existing)
+    
     async def create(self, user: CreateUserDTO) -> UserDTO:
         query = (
             insert(User)

@@ -1,5 +1,5 @@
 from src_auth.features.auth.v1.dto import OAuthAccountDTO
-from typing import Annotated, Literal, Callable
+from typing import Annotated, Callable
 from uuid import UUID
 
 import jwt
@@ -11,7 +11,6 @@ from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
-    UserNotFoundError,
 )
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
@@ -30,11 +29,8 @@ from src_auth.features.auth.v1.repository import (
     get_oauth_account_repository,
 )
 from src_auth.features.roles.v1.service import RoleService, get_role_service
-from src_auth.features.shared.dto import UserDTO
+from src_auth.features.shared.dto import UserDTO, OAuthProviderType
 from src_auth.features.users.v1.service import UserService, get_user_service
-
-
-OAuthProviderType = Literal["yandex"]
 
 
 class AuthService:
@@ -75,58 +71,21 @@ class AuthService:
 
     async def oauth_login_user(
         self,
-        email: str | None,
+        email: str,
         first_name: str | None,
         last_name: str | None,
         provider: OAuthProviderType,
         provider_user_id: str,
         user_agent: str,
     ) -> tuple[UserDTO, str, str]:
-        oauth_account = await self.oauth_service.get_oauth_user_account(
-            provider=provider,
-            provider_user_id=provider_user_id,
+        user = await self._resolve_oauth_user(
+            email,
+            first_name,
+            last_name,
+            provider,
+            provider_user_id,
         )
-        # TODO: Refactor
-        if oauth_account:
-            user = await self.user_service.get_user_by_id(oauth_account.user_id)
-        elif email:
-            try:
-                user = await self.user_service.get_user_by_email(email)
-                await self.oauth_service.create_oauth_account(
-                    user_id=user.id,
-                    provider=provider,
-                    provider_user_id=provider_user_id,
-                )
-            except UserNotFoundError:
-                user = await self.user_service.create_user(
-                    email=email,
-                    first_name=first_name,
-                    last_name=last_name,
-                    password=None,
-                )
-        else:
-            user = await self.user_service.create_user(
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                password=None,
-            )
-            await self.oauth_service.create_oauth_account(
-                user_id=user.id,
-                provider=provider,
-                provider_user_id=provider_user_id,
-            )
-
-        await self.user_service.create_auth_entry(user.id, user_agent)
-        token_ver = await self.session_service.get_or_create_token_version(user.id)
-        roles = await self._get_user_roles(user.id)
-        access, refresh = await self.session_service.create_session_tokens(
-            user.id,
-            roles,
-            token_ver,
-        )
-
-        return user, access, refresh
+        return await self._process_login(user, user_agent)
 
     async def login_user(
         self,
@@ -138,17 +97,7 @@ class AuthService:
         if not verify_password(password, user.password_hash):
             raise InvalidCredentialsError("Invalid credentials")
 
-        await self.user_service.create_auth_entry(user.id, user_agent)
-
-        token_ver = await self.session_service.get_or_create_token_version(user.id)
-        roles = await self._get_user_roles(user.id)
-
-        access, refresh = await self.session_service.create_session_tokens(
-            user.id,
-            roles,
-            token_ver,
-        )
-        return user, access, refresh
+        return await self._process_login(user, user_agent)
 
     async def refresh_tokens(
         self,
@@ -166,7 +115,6 @@ class AuthService:
 
         await self.session_service.verify_session(payload, refresh)
         await self.session_service.blacklist_tokens(payload.user_id, access, refresh)
-
         new_access, new_refresh = await self.session_service.create_session_tokens(
             user_uuid,
             roles,
@@ -201,6 +149,49 @@ class AuthService:
     async def _get_user_roles(self, user_id: UUID) -> list[str]:
         roles = await self.role_service.get_all_user_roles(user_id)
         return [role.name for role in roles]
+
+    async def _resolve_oauth_user(
+        self,
+        email: str,
+        first_name: str | None,
+        last_name: str | None,
+        provider: OAuthProviderType,
+        provider_user_id: str,
+    ) -> UserDTO:
+        oauth_account = await self.oauth_service.get_oauth_user_account(
+            provider=provider,
+            provider_user_id=provider_user_id,
+        )
+        if oauth_account:
+            return await self.user_service.get_user_by_id(oauth_account.user_id)
+
+        user = await self.user_service.get_or_create_user(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password=None,
+        )
+        await self.oauth_service.get_or_create_oauth_account(
+            user_id=user.id,
+            provider=provider,
+            provider_user_id=provider_user_id,
+        )
+        return user
+
+    async def _process_login(
+        self,
+        user: UserDTO,
+        user_agent: str,
+    ) -> tuple[UserDTO, str, str]:
+        await self.user_service.create_auth_entry(user.id, user_agent)
+        token_ver = await self.session_service.get_or_create_token_version(user.id)
+        roles = await self._get_user_roles(user.id)
+        access, refresh = await self.session_service.create_session_tokens(
+            user.id,
+            roles,
+            token_ver,
+        )
+        return user, access, refresh
 
 
 class SessionService:
@@ -305,6 +296,19 @@ class OAuthService:
     async def get_yandex_login_url(self) -> str:
         async with self.yandex_sso:
             return await self.yandex_sso.get_login_url()
+
+    async def get_or_create_oauth_account(
+        self,
+        user_id: UUID,
+        provider: str,
+        provider_user_id: str,
+    ) -> OAuthAccountDTO:
+        oauth_account = OAuthAccountDTO(
+            user_id=user_id,
+            provider=provider,
+            provider_user_id=provider_user_id,
+        )
+        return await self.oauth_repo.get_or_create_oauth_account(oauth_account)
 
     async def create_oauth_account(
         self,

@@ -1,8 +1,8 @@
 """Initial revision
 
-Revision ID: 51338366aad4
+Revision ID: 52d00db3f5a6
 Revises: 
-Create Date: 2026-04-22 04:53:45.337562
+Create Date: 2026-05-11 07:14:55.913182
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '51338366aad4'
+revision: str = '52d00db3f5a6'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,9 +33,9 @@ def upgrade() -> None:
     )
     op.create_table('users',
     sa.Column('email', sa.String(), nullable=False),
-    sa.Column('first_name', sa.String(), nullable=False),
+    sa.Column('first_name', sa.String(), nullable=True),
     sa.Column('last_name', sa.String(), nullable=True),
-    sa.Column('password_hash', sa.Text(), nullable=False),
+    sa.Column('password_hash', sa.Text(), nullable=True),
     sa.Column('is_active', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -43,6 +43,18 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id', name=op.f('pk_users'))
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_table('oauth_accounts',
+    sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('provider', sa.String(length=50), nullable=False),
+    sa.Column('provider_user_id', sa.String(), nullable=False),
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_oauth_accounts_user_id_users'), ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_oauth_accounts')),
+    sa.UniqueConstraint('provider', 'provider_user_id', name=op.f('uq_oauth_accounts_provider'))
+    )
+    op.create_index(op.f('ix_oauth_accounts_user_id'), 'oauth_accounts', ['user_id'], unique=False)
     op.create_table('token_versions',
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('version', sa.Integer(), nullable=False),
@@ -84,6 +96,8 @@ def downgrade() -> None:
     op.drop_table('user_auth_history')
     op.drop_index(op.f('ix_token_versions_user_id'), table_name='token_versions')
     op.drop_table('token_versions')
+    op.drop_index(op.f('ix_oauth_accounts_user_id'), table_name='oauth_accounts')
+    op.drop_table('oauth_accounts')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_table('roles')

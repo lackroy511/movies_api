@@ -141,10 +141,45 @@ class OAuthAccountRepoInterface(ABC):
     ) -> OAuthAccountDTO | None:
         pass
 
+    @abstractmethod
+    async def get_or_create_oauth_account(
+        self,
+        account: OAuthAccountDTO,
+    ) -> OAuthAccountDTO:
+        pass
+
 
 class OAuthAccountRepo(OAuthAccountRepoInterface):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def get_or_create_oauth_account(
+        self,
+        account: OAuthAccountDTO,
+    ) -> OAuthAccountDTO:
+        existing = await self.get_oauth_account(
+            provider=account.provider,
+            provider_user_id=account.provider_user_id,
+        )
+        if existing is not None:
+            return existing
+
+        try:
+            return await self.create_oauth_account(account)
+        except IntegrityError as e:
+            orig = getattr(e, "orig", None)
+            if not orig or not hasattr(orig, "pgcode"):
+                raise
+
+            if orig.pgcode == "23505":
+                existing = await self.get_oauth_account(
+                    provider=account.provider,
+                    provider_user_id=account.provider_user_id,
+                )
+                if existing is not None:
+                    return existing
+
+            raise
 
     async def create_oauth_account(self, account: OAuthAccountDTO) -> OAuthAccountDTO:
         query = (

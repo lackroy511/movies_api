@@ -1,7 +1,8 @@
+from src_auth.core.config.settings import settings
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from src_auth.core.exc.exceptions import (
     AccessDeniedError,
@@ -13,6 +14,7 @@ from src_auth.core.exc.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
     UserOrRoleNotFoundError,
+    OAuthError,
 )
 
 log = logging.getLogger(__name__)
@@ -65,6 +67,10 @@ async def access_denied_handler(request: Request, exc: Exception) -> JSONRespons
     return JSONResponse(status_code=403, content={"detail": "Access denied"})
 
 
+async def oauth_error_handler(request: Request, exc: Exception) -> RedirectResponse:
+    return RedirectResponse(url=f"{settings.frontend_url}/auth_error.html")
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, unexpected_error_handler)
     app.add_exception_handler(UserAlreadyExistsError, user_already_exists_handler)
@@ -76,3 +82,4 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RoleAlreadyAssignedError, role_already_assigned_handler)
     app.add_exception_handler(RoleAlreadyExistsError, role_already_exists_handler)
     app.add_exception_handler(AccessDeniedError, access_denied_handler)
+    app.add_exception_handler(OAuthError, oauth_error_handler)

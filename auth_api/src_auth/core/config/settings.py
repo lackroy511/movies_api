@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     access_cookie_name: str
     refresh_cookie_name: str
     cookie_secure: bool
+    frontend_url: str
     
     jaeger_service_name: str
     jaeger_tracer_path: str

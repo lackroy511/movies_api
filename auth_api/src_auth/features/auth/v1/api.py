@@ -1,3 +1,5 @@
+from src_auth.features.shared.dto import YandexOpenID
+from fastapi.responses import RedirectResponse
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from fastapi_sso import OpenID
 from typing import Annotated, cast
@@ -17,7 +19,11 @@ from src_auth.features.auth.v1.service import (
     AuthService,
     get_auth_service,
 )
-from src_auth.features.shared.dependencies import get_access_token, get_refresh_token
+from src_auth.features.shared.dependencies import (
+    get_access_token,
+    get_refresh_token,
+    get_yandex_openid,
+)
 from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
@@ -116,32 +122,23 @@ async def get_login_yandex_url(
 @router.get("/login/yandex/callback")
 async def login_yandex_callback(
     request: Request,
-    yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
+    yandex_openid: Annotated[YandexOpenID, Depends(get_yandex_openid)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     response: Response,
-) -> UserResponse:
-    yandex_provider = "yandex"
-    # TODO: Вынести в Depends, Refactor
-    try:
-        async with yandex_sso:
-            openid = cast(OpenID, await yandex_sso.verify_and_process(request))
-    except InvalidGrantError:
-        raise HTTPException(status_code=401, detail="Authentication failed") from None
-    
-    if not openid:
-        raise HTTPException(status_code=401, detail="Invalid openid")
-
-    if openid.provider != yandex_provider or not openid.id:
-        raise HTTPException(status_code=401, detail="Invalid provider")
+) -> RedirectResponse:
 
     user_agent = request.headers.get("user-agent", "Unknown user-agent")
-    logged_user, access, refresh = await auth_service.oauth_login_user(
-        email=openid.email,
-        first_name=openid.first_name,
-        last_name=openid.last_name,
-        provider=yandex_provider,
-        provider_user_id=openid.id,
+    _, access, refresh = await auth_service.oauth_login_user(
+        email=yandex_openid.email,
+        first_name=yandex_openid.first_name,
+        last_name=yandex_openid.last_name,
+        provider=yandex_openid.provider,
+        provider_user_id=yandex_openid.provider_user_id,
         user_agent=user_agent,
     )
+    response = RedirectResponse(
+        url=settings.frontend_url,
+        status_code=302,
+    )
     set_token_cookie(response, access, refresh)
-    return UserResponse.model_validate(logged_user)
+    return response

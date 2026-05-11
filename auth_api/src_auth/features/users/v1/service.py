@@ -19,7 +19,7 @@ class UserService:
 
     async def create_user(
         self,
-        email: str | None,
+        email: str,
         first_name: str | None,
         last_name: str | None,
         password: str | None,
@@ -31,6 +31,21 @@ class UserService:
             password_hash=hash_password(password) if password else None,
         )
         return await self.repository.create(to_create)
+
+    async def get_or_create_user(
+        self,
+        email: str,
+        first_name: str | None,
+        last_name: str | None,
+        password: str | None,
+    ) -> UserDTO:
+        to_create = CreateUserDTO(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password_hash=hash_password(password) if password else None,
+        )
+        return await self.repository.get_or_create(to_create)
 
     async def get_user_by_id(self, user_id: UUID) -> UserDTO:
         user = await self.repository.get_by_id(user_id)

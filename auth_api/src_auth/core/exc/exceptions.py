@@ -37,3 +37,7 @@ class RoleAlreadyExistsError(BaseAuthServiceError):
 
 class AccessDeniedError(BaseAuthServiceError): 
     pass
+
+
+class OAuthError(BaseAuthServiceError):
+    pass

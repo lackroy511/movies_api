@@ -5,7 +5,7 @@ from uuid import UUID
 
 @dataclass
 class CreateUserDTO:
-    email: str | None
+    email: str
     first_name: str | None
     last_name: str | None
     password_hash: str | None
