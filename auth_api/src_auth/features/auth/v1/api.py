@@ -1,3 +1,5 @@
+from src_auth.features.shared.dto import OAuthOpenID
+from src_auth.core.security.sso import OAuthProviderType, get_oauth_provider, get_oauth_openid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -17,9 +19,7 @@ from src_auth.features.auth.v1.service import (
 from src_auth.features.shared.dependencies import (
     get_access_token,
     get_refresh_token,
-    get_yandex_openid,
 )
-from src_auth.features.shared.dto import YandexOpenID
 from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
@@ -107,28 +107,29 @@ async def logout_all(
     return StatusResponse()
 
 
-@router.get("/login/yandex-url")
+@router.get("/login/{provider_name:str}/url")
 async def get_login_yandex_url(
-    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    provider_name: OAuthProviderType,
 ) -> OAuthLoginURLResponse:
-    url = await auth_service.get_oauth_login_url(provider="yandex")
+    provider = await get_oauth_provider(provider_name)
+    url = await provider.get_login_url()
     return OAuthLoginURLResponse(url=url)
 
 
-@router.get("/login/yandex/callback")
+@router.get("/login/{provider_name:str}/callback")
 async def login_yandex_callback(
+    provider_name: OAuthProviderType,
     request: Request,
-    yandex_openid: Annotated[YandexOpenID, Depends(get_yandex_openid)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> RedirectResponse:
-
+    openid = await get_oauth_openid(request, provider_name)
     user_agent = request.headers.get("user-agent", "Unknown user-agent")
     _, access, refresh = await auth_service.oauth_login_user(
-        email=yandex_openid.email,
-        first_name=yandex_openid.first_name,
-        last_name=yandex_openid.last_name,
-        provider=yandex_openid.provider,
-        provider_user_id=yandex_openid.provider_user_id,
+        email=openid.email,
+        first_name=openid.first_name,
+        last_name=openid.last_name,
+        provider=openid.provider,
+        provider_user_id=openid.provider_user_id,
         user_agent=user_agent,
     )
     response = RedirectResponse(

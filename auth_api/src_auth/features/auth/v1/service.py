@@ -1,9 +1,9 @@
-from typing import Annotated, Callable
+from src_auth.core.security.sso import OAuthProviderType
+from typing import Annotated
 from uuid import UUID
 
 import jwt
 from fastapi import Depends
-from fastapi_sso.sso.yandex import YandexSSO
 
 from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
@@ -18,7 +18,6 @@ from src_auth.core.security.jwt import (
     create_token,
     verify_token,
 )
-from src_auth.core.security.sso import get_yandex_sso
 from src_auth.features.auth.v1.dto import OAuthAccountDTO
 from src_auth.features.auth.v1.repository import (
     OAuthAccountRepoInterface,
@@ -29,7 +28,7 @@ from src_auth.features.auth.v1.repository import (
     get_version_token_repository,
 )
 from src_auth.features.roles.v1.service import RoleService, get_role_service
-from src_auth.features.shared.dto import OAuthProviderType, UserDTO
+from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
 
 
@@ -59,15 +58,6 @@ class AuthService:
             last_name=last_name,
             password=password,
         )
-
-    async def get_oauth_login_url(
-        self,
-        provider: OAuthProviderType,
-    ) -> str:
-        url_provider_mapping: dict[OAuthProviderType, Callable] = {
-            "yandex": self.oauth_service.get_yandex_login_url,
-        }
-        return await url_provider_mapping[provider]()
 
     async def oauth_login_user(
         self,
@@ -287,15 +277,9 @@ class SessionService:
 class OAuthService:
     def __init__(
         self,
-        yandex_sso: YandexSSO,
         oauth_repo: OAuthAccountRepoInterface,
     ) -> None:
-        self.yandex_sso = yandex_sso
         self.oauth_repo = oauth_repo
-
-    async def get_yandex_login_url(self) -> str:
-        async with self.yandex_sso:
-            return await self.yandex_sso.get_login_url()
 
     async def get_or_create_oauth_account(
         self,
@@ -370,10 +354,9 @@ async def get_session_service(
 
 
 async def get_oauth_service(
-    yandex_sso: Annotated[YandexSSO, Depends(get_yandex_sso)],
     oauth_repo: Annotated[
         OAuthAccountRepoInterface,
         Depends(get_oauth_account_repository),
     ],
 ) -> OAuthService:
-    return OAuthService(yandex_sso, oauth_repo)
+    return OAuthService(oauth_repo)
