@@ -41,4 +41,5 @@ async def before_request(request: Request, call_next: Callable) -> Response:
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8020)

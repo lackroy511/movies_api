@@ -29,20 +29,20 @@ async def create_user_roles(session: AsyncSession) -> None:
     for role in missing_roles:
         new_role = Role(name=role, description="Default role", is_system=True)
         session.add(new_role)
-    
+
     await session.flush()
 
 
 async def create_admin_user(session: AsyncSession) -> None:
     if len(settings.admin_password) < 12:
         raise ValueError("Admin password must be at least 12 characters long")
-    
+
     query = select(Role).where(Role.name == settings.admin_role)
     result = await session.execute(query)
     admin_role = result.scalar_one_or_none()
     if not admin_role:
         raise ValueError("Admin role not found")
-    
+
     query = select(User).where(User.email == settings.admin_email)
     result = await session.execute(query)
     admin_user = result.scalar_one_or_none()
@@ -56,10 +56,10 @@ async def create_admin_user(session: AsyncSession) -> None:
         )
         session.add(admin_user)
         await session.flush()
-    
+
     try:
         query = insert(user_roles).values(
-            user_id=admin_user.id, 
+            user_id=admin_user.id,
             role_id=admin_role.id,
         )
         await session.execute(query)

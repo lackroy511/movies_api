@@ -116,7 +116,7 @@ async def test_change_email_validation(
         "password": "Password123!",
     }
     _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
-    
+
     body, status, _ = await make_request(
         "PATCH",
         "/v1/users/me/change-email",

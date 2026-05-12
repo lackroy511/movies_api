@@ -8,18 +8,17 @@ To add new SSO providers:
 Example:
 from fastapi_sso.sso.google import GoogleSSO
 """
-from fastapi import Request
-from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
-from src_auth.core.exc.exceptions import OAuthError
 
 from dataclasses import dataclass
-
-
 from typing import Literal, cast
-from fastapi_sso import SSOBase, OpenID
+
+from fastapi import Request
+from fastapi_sso import OpenID, SSOBase
 from fastapi_sso.sso.yandex import YandexSSO
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
 from src_auth.core.config.settings import settings
+from src_auth.core.exc.exceptions import OAuthError
 
 OAuthProviderType = Literal["yandex",]
 

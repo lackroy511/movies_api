@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     base_dir: Path = BASE_DIR
     log_level: str
-    
+
     redis_base_url: str
     redis_cache_ttl: int
 
@@ -26,41 +26,41 @@ class Settings(BaseSettings):
     postgres_password: str
     db_host: str
     db_port: int
-    
+
     access_token_expire_minutes: int
     refresh_token_expire_days: int
-    
+
     secret_key: str
-    
+
     default_user_roles: list[RolesType] = ["superuser", "staff", "subscriber"]
     admin_role: RolesType = "superuser"
-    
+
     admin_email: str
     admin_password: str
-    
+
     access_cookie_name: str
     refresh_cookie_name: str
     cookie_secure: bool
     frontend_url: str
-    
+
     jaeger_service_name: str
     jaeger_tracer_path: str
-    
+
     allow_insecure_sso_http: bool
     yandex_client_id: str
     yandex_client_secret: str
     yandex_redirect_uri: str
-    
+
     @computed_field
     @property
     def db_url(self) -> str:
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.db_host}:{self.db_port}/{self.postgres_db}"  # noqa: E501
-    
+
     @computed_field
     @property
     def access_token_ttl(self) -> int:
         return self.access_token_expire_minutes * 60
-    
+
     @computed_field
     @property
     def refresh_token_ttl(self) -> int:

@@ -1,5 +1,3 @@
-from src_auth.features.shared.dto import OAuthOpenID
-from src_auth.core.security.sso import OAuthProviderType, get_oauth_provider, get_oauth_openid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -7,6 +5,12 @@ from fastapi.responses import RedirectResponse
 
 from src_auth.core.config.settings import settings
 from src_auth.core.security.cookies import clear_token_cookie, set_token_cookie
+from src_auth.core.security.sso import (
+    OAuthOpenID,
+    SSOBase,
+    get_oauth_openid,
+    get_oauth_provider,
+)
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
     OAuthLoginURLResponse,
@@ -108,21 +112,19 @@ async def logout_all(
 
 
 @router.get("/login/{provider_name:str}/url")
-async def get_login_yandex_url(
-    provider_name: OAuthProviderType,
+async def get_oauth_login_url(
+    provider: Annotated[SSOBase, Depends(get_oauth_provider)],
 ) -> OAuthLoginURLResponse:
-    provider = await get_oauth_provider(provider_name)
     url = await provider.get_login_url()
     return OAuthLoginURLResponse(url=url)
 
 
 @router.get("/login/{provider_name:str}/callback")
-async def login_yandex_callback(
-    provider_name: OAuthProviderType,
+async def login_oauth_callback(
+    openid: Annotated[OAuthOpenID, Depends(get_oauth_openid)],
     request: Request,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> RedirectResponse:
-    openid = await get_oauth_openid(request, provider_name)
     user_agent = request.headers.get("user-agent", "Unknown user-agent")
     _, access, refresh = await auth_service.oauth_login_user(
         email=openid.email,

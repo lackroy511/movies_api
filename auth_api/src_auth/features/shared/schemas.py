@@ -6,8 +6,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True) 
-    
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     email: str
     first_name: str | None

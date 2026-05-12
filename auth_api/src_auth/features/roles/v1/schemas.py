@@ -14,12 +14,12 @@ class UpdateRoleRequest(BaseModel):
 
 
 class RoleResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True) 
-    
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     name: str
     description: str | None = None
-    
+
 
 class IsRoleAssignedResponse(BaseModel):
     is_assigned: bool

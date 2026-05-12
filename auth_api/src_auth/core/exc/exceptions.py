@@ -1,4 +1,3 @@
-
 class BaseAuthServiceError(Exception):
     pass
 
@@ -35,7 +34,7 @@ class RoleAlreadyExistsError(BaseAuthServiceError):
     pass
 
 
-class AccessDeniedError(BaseAuthServiceError): 
+class AccessDeniedError(BaseAuthServiceError):
     pass
 
 

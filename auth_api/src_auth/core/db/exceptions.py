@@ -1,3 +1,2 @@
-
 class SaveRedisCacheError(Exception):
     pass

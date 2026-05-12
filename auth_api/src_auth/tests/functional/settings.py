@@ -18,23 +18,23 @@ class TestsSettings(BaseSettings):
 
     auth_api_base_url: str = "http://auth_api:8020/api/auth"
     redis_base_url: str = "redis://auth_redis:6379"
-    
+
     postgres_db: str
     postgres_user: str
     postgres_password: str
     db_host: str
     db_port: int
-    
+
     default_user_roles: list[RolesType] = settings.default_user_roles
     admin_role: RolesType = settings.admin_role
-    
+
     admin_email: str
     admin_password: str
-    
+
     access_cookie_name: str
     refresh_cookie_name: str
     cookie_secure: bool
-    
+
     @computed_field
     @property
     def db_url(self) -> str:

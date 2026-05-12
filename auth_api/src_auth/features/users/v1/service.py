@@ -51,9 +51,9 @@ class UserService:
         user = await self.repository.get_by_id(user_id)
         if not user:
             raise UserNotFoundError("User not found")
-        
+
         return user
-    
+
     async def get_user_by_email(self, email: str) -> UserDTO:
         user = await self.repository.get_by_email(email)
         if not user:
@@ -63,7 +63,7 @@ class UserService:
 
     async def create_auth_entry(self, user_id: UUID, user_agent: str) -> None:
         await self.repository.create_auth_entry(user_id, user_agent)
-    
+
     async def get_auth_history(self, user_id: UUID) -> list[UserAuthHistoryDTO]:
         return await self.repository.get_auth_history(user_id)
 

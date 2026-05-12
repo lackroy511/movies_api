@@ -64,7 +64,7 @@ class UserRepo(UserRepoInterface):
             result = await self.session.execute(query)
             existing = result.scalar_one()
             return self._transform_user_to_dto(existing)
-    
+
     async def create(self, user: CreateUserDTO) -> UserDTO:
         query = (
             insert(User)
@@ -136,11 +136,7 @@ class UserRepo(UserRepoInterface):
         ]
 
     async def update_email(self, user_id: UUID, new_email: str) -> None:
-        query = (
-            update(User)
-            .where(User.id == user_id)
-            .values(email=new_email)
-        )
+        query = update(User).where(User.id == user_id).values(email=new_email)
         try:
             await self.session.execute(query)
         except IntegrityError as e:

@@ -1,4 +1,3 @@
-from src_auth.core.security.sso import OAuthProviderType
 from typing import Annotated
 from uuid import UUID
 
@@ -18,6 +17,7 @@ from src_auth.core.security.jwt import (
     create_token,
     verify_token,
 )
+from src_auth.core.security.sso import OAuthProviderType
 from src_auth.features.auth.v1.dto import OAuthAccountDTO
 from src_auth.features.auth.v1.repository import (
     OAuthAccountRepoInterface,
