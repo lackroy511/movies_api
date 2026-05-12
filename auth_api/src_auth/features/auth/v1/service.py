@@ -246,7 +246,7 @@ class SessionService:
         user_id: UUID,
     ) -> int:
         version = await self._get_token_version_from_cache(user_id)
-        if version:
+        if version is not None:
             return version
 
         ver = await self.version_repo.get_or_create_token_version(user_id)
