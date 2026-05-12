@@ -24,6 +24,7 @@ async def test_change_password_success(
     _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
 
     change_payload = {
+        "current_password": "OldPassword123!",
         "password": "NewPassword456!",
         "password_confirm": "NewPassword456!",
     }
@@ -36,6 +37,20 @@ async def test_change_password_success(
 
     assert status == 200
     assert body["status"] == "success"
+
+    login_new_payload = {
+        "email": "change-pass-test@example.com",
+        "password": "NewPassword456!",
+    }
+    body, status, _ = await make_request("POST", "/v1/login", data=login_new_payload)
+    assert status == 200
+
+    login_old_payload = {
+        "email": "change-pass-test@example.com",
+        "password": "OldPassword123!",
+    }
+    body, status, _ = await make_request("POST", "/v1/login", data=login_old_payload)
+    assert status == 401
 
 
 async def test_change_password_unauthorized(
@@ -61,13 +76,17 @@ async def test_change_password_unauthorized(
     [
         (
             {
+                "current_password": "Password123!",
                 "password": "NewPassword456!",
                 "password_confirm": "DifferentPass789!",
             },
             "Passwords do not match",
         ),
         (
-            {},
+            {
+                "password": "NewPassword456!",
+                "password_confirm": "NewPassword456!",
+            },
             "Field required",
         ),
     ],
@@ -106,3 +125,45 @@ async def test_change_password_validation(
         assert any(expected_error in msg for msg in error_messages)
     else:
         assert expected_error in str(body["detail"])
+
+
+async def test_change_password_wrong_current_password(
+    make_request: MakeRequestType,
+    clear_users_table: None,
+) -> None:
+    register_payload = {
+        "email": "wrong-current@example.com",
+        "first_name": "Wrong",
+        "last_name": "Current",
+        "password": "ActualPassword123!",
+        "password_confirm": "ActualPassword123!",
+    }
+    await make_request("POST", "/v1/register", data=register_payload)
+
+    login_payload = {
+        "email": "wrong-current@example.com",
+        "password": "ActualPassword123!",
+    }
+    _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
+
+    change_payload = {
+        "current_password": "WrongPassword456!",
+        "password": "NewPassword789!",
+        "password_confirm": "NewPassword789!",
+    }
+    body, status, _ = await make_request(
+        "PATCH",
+        "/v1/users/me/change-password",
+        data=change_payload,
+        cookies=cookies,
+    )
+
+    assert status == 401
+    assert body["detail"] == "Invalid credentials"
+
+    login_old_payload = {
+        "email": "wrong-current@example.com",
+        "password": "ActualPassword123!",
+    }
+    body, status, _ = await make_request("POST", "/v1/login", data=login_old_payload)
+    assert status == 200

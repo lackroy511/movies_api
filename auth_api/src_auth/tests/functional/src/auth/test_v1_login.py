@@ -58,8 +58,8 @@ async def test_login_user_not_found(
     }
     body, status, _ = await make_request("POST", "/v1/login", data=payload)
 
-    assert status == 404
-    assert body["detail"] == "User not found"
+    assert status == 401
+    assert body["detail"] == "Invalid credentials"
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,8 @@ from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
-    InvalidTokenOrExpiredTokenError, UserNotFoundError,
+    InvalidTokenOrExpiredTokenError,
+    UserNotFoundError,
 )
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
@@ -256,7 +257,7 @@ class SessionService:
     def decode_token(self, token: str, token_type: TokenType) -> TokenPayload:
         try:
             return verify_token(token, token_type)
-        except (jwt.PyJWTError, ValueError):
+        except jwt.PyJWTError, ValueError:
             raise InvalidTokenOrExpiredTokenError("Invalid or expired token") from None
 
     async def _get_token_version_from_cache(self, user_id: UUID) -> int | None:

@@ -3,8 +3,8 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from src_auth.core.exc.exceptions import UserNotFoundError
-from src_auth.core.security.hash_pass import hash_password
+from src_auth.core.exc.exceptions import InvalidCredentialsError, UserNotFoundError
+from src_auth.core.security.hash_pass import hash_password, verify_password
 from src_auth.features.shared.dto import UserDTO
 from src_auth.features.users.v1.dto import CreateUserDTO, UserAuthHistoryDTO
 from src_auth.features.users.v1.repository import (
@@ -70,7 +70,17 @@ class UserService:
     async def change_email(self, user_id: UUID, new_email: str) -> None:
         await self.repository.update_email(user_id, new_email)
 
-    async def change_password(self, user_id: UUID, new_password: str) -> None:
+    async def change_password(
+        self,
+        user_id: UUID,
+        current_password: str,
+        new_password: str,
+    ) -> None:
+        user = await self.get_user_by_id(user_id)
+        if user.password_hash is None:
+            raise InvalidCredentialsError("Invalid credentials")
+        if not verify_password(current_password, user.password_hash):
+            raise InvalidCredentialsError("Invalid credentials")
         hashed_password = hash_password(new_password)
         await self.repository.update_password(user_id, hashed_password)
 

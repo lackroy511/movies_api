@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, model_validator, Field
 
 
 class ChangeEmailRequest(BaseModel):
@@ -8,7 +8,8 @@ class ChangeEmailRequest(BaseModel):
 
 
 class ChangePasswordRequest(BaseModel):
-    password: str
+    current_password: str
+    password: str = Field(min_length=8, max_length=128)
     password_confirm: str
 
     @model_validator(mode="after")

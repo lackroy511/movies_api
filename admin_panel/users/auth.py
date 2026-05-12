@@ -69,7 +69,7 @@ class CustomAuthBackend(BaseBackend):
                     "is_superuser": settings.SUPERUSER_ROLE in user_roles,
                 },
             )
-        except (KeyError, User.DoesNotExist):
+        except KeyError, User.DoesNotExist:
             return None
 
         return user

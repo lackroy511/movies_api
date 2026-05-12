@@ -52,6 +52,7 @@ async def change_password(
 ) -> StatusResponse:
     await user_service.change_password(
         UUID(token_payload.user_id),
+        request.current_password,
         request.password,
     )
     return StatusResponse(status="success")
