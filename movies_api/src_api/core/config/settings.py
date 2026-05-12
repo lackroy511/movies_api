@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src_api.features.shared.types import RolesType
@@ -24,7 +25,7 @@ class Settings(BaseSettings):
     redis_base_url: str
     redis_cache_ttl: int
 
-    secret_key: str
+    secret_key: str = Field(min_length=32)
     
     subscriber_role: RolesType = "subscriber"
     non_subscriber_content_age: int = 3

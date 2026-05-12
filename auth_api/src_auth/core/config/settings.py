@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import computed_field
+from pydantic import computed_field, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent.parent.parent
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int
     refresh_token_expire_days: int
 
-    secret_key: str
+    secret_key: str = Field(min_length=32)
 
     default_user_roles: list[RolesType] = ["superuser", "staff", "subscriber"]
     admin_role: RolesType = "superuser"
