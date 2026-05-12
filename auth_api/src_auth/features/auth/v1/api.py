@@ -1,19 +1,14 @@
-from src_auth.features.shared.dto import YandexOpenID
-from fastapi.responses import RedirectResponse
-from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
-from fastapi_sso import OpenID
-from typing import Annotated, cast
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi_sso.sso.yandex import YandexSSO
+from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import RedirectResponse
 
 from src_auth.core.config.settings import settings
 from src_auth.core.security.cookies import clear_token_cookie, set_token_cookie
-from src_auth.core.security.sso import get_yandex_sso
 from src_auth.features.auth.v1.schemas import (
     LoginRequest,
-    RegisterRequest,
     OAuthLoginURLResponse,
+    RegisterRequest,
 )
 from src_auth.features.auth.v1.service import (
     AuthService,
@@ -24,6 +19,7 @@ from src_auth.features.shared.dependencies import (
     get_refresh_token,
     get_yandex_openid,
 )
+from src_auth.features.shared.dto import YandexOpenID
 from src_auth.features.shared.schemas import ErrorResponse, StatusResponse, UserResponse
 
 router = APIRouter(prefix="/v1", tags=["Auth V1"])
@@ -124,7 +120,6 @@ async def login_yandex_callback(
     request: Request,
     yandex_openid: Annotated[YandexOpenID, Depends(get_yandex_openid)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    response: Response,
 ) -> RedirectResponse:
 
     user_agent = request.headers.get("user-agent", "Unknown user-agent")

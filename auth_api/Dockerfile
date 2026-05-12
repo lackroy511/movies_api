@@ -2,7 +2,7 @@ FROM python:3.14-slim-trixie
 
 USER root
 
-EXPOSE 8010
+EXPOSE 8020
 
 WORKDIR /app
 

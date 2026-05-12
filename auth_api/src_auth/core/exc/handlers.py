@@ -1,20 +1,20 @@
-from src_auth.core.config.settings import settings
 import logging
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from src_auth.core.config.settings import settings
 from src_auth.core.exc.exceptions import (
     AccessDeniedError,
     InvalidCredentialsError,
     InvalidTokenOrExpiredTokenError,
+    OAuthError,
     RoleAlreadyAssignedError,
     RoleAlreadyExistsError,
     RoleNotFoundError,
     UserAlreadyExistsError,
     UserNotFoundError,
     UserOrRoleNotFoundError,
-    OAuthError,
 )
 
 log = logging.getLogger(__name__)

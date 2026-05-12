@@ -1,4 +1,3 @@
-from src_auth.features.auth.v1.dto import OAuthAccountDTO
 from typing import Annotated, Callable
 from uuid import UUID
 
@@ -20,16 +19,17 @@ from src_auth.core.security.jwt import (
     verify_token,
 )
 from src_auth.core.security.sso import get_yandex_sso
+from src_auth.features.auth.v1.dto import OAuthAccountDTO
 from src_auth.features.auth.v1.repository import (
+    OAuthAccountRepoInterface,
     TokenBlacklistRepoInterface,
     TokenVersionRepoInterface,
     get_blacklist_token_repository,
-    get_version_token_repository,
-    OAuthAccountRepoInterface,
     get_oauth_account_repository,
+    get_version_token_repository,
 )
 from src_auth.features.roles.v1.service import RoleService, get_role_service
-from src_auth.features.shared.dto import UserDTO, OAuthProviderType
+from src_auth.features.shared.dto import OAuthProviderType, UserDTO
 from src_auth.features.users.v1.service import UserService, get_user_service
 
 

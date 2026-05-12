@@ -11,8 +11,8 @@ from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.db.sql_alch import get_db_session
 from src_auth.core.exc.exceptions import UserNotFoundError
-from src_auth.features.auth.v1.dto import TokenVersionDTO, OAuthAccountDTO
-from src_auth.features.auth.v1.models import TokenVersion, OauthAccount
+from src_auth.features.auth.v1.dto import OAuthAccountDTO, TokenVersionDTO
+from src_auth.features.auth.v1.models import OauthAccount, TokenVersion
 
 
 class TokenBlacklistRepoInterface(ABC):

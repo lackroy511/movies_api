@@ -1,12 +1,10 @@
-from fastapi_sso import OpenID
-from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
-from src_auth.core.security.sso import get_yandex_sso
-from fastapi_sso.sso.yandex import YandexSSO
-from src_auth.features.shared.dto import YandexOpenID, OAuthProviderType
 from typing import Annotated, cast
 
 from fastapi import Depends, Request
 from fastapi.security import APIKeyCookie
+from fastapi_sso import OpenID
+from fastapi_sso.sso.yandex import YandexSSO
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
 from src_auth.core.config.settings import RolesType, settings
 from src_auth.core.exc.exceptions import (
@@ -15,7 +13,9 @@ from src_auth.core.exc.exceptions import (
     OAuthError,
 )
 from src_auth.core.security.jwt import TokenPayload
+from src_auth.core.security.sso import get_yandex_sso
 from src_auth.features.auth.v1.service import SessionService, get_session_service
+from src_auth.features.shared.dto import OAuthProviderType, YandexOpenID
 
 access_cookie_scheme = APIKeyCookie(
     name=settings.access_cookie_name,
