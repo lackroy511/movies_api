@@ -8,7 +8,7 @@ from src_auth.core.config.settings import settings
 from src_auth.core.db.cache import CacheClientInterface, get_redis_client
 from src_auth.core.exc.exceptions import (
     InvalidCredentialsError,
-    InvalidTokenOrExpiredTokenError,
+    InvalidTokenOrExpiredTokenError, UserNotFoundError,
 )
 from src_auth.core.security.hash_pass import verify_password
 from src_auth.core.security.jwt import (
@@ -83,9 +83,14 @@ class AuthService:
         password: str,
         user_agent: str,
     ) -> tuple[UserDTO, str, str]:
-        user = await self.user_service.get_user_by_email(email)
+        err_msg = "Invalid credentials"
+        try:
+            user = await self.user_service.get_user_by_email(email)
+        except UserNotFoundError:
+            raise InvalidCredentialsError(err_msg) from None
+
         if not verify_password(password, user.password_hash):
-            raise InvalidCredentialsError("Invalid credentials")
+            raise InvalidCredentialsError(err_msg)
 
         return await self._process_login(user, user_agent)
 
