@@ -127,7 +127,7 @@ async def test_register_optional_last_name(
                 "password": "123",
                 "password_confirm": "123",
             },
-            "String should have at least 4 characters",
+            "String should have at least 8 characters",
         ),
         (
             {
