@@ -37,6 +37,7 @@ class CacheClientInterface(ABC):
 RETRY_EXCEPTIONS = (
     ConnectionError,
     TimeoutError,
+    SaveRedisCacheError,
 )
 
 

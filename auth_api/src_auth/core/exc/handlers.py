@@ -21,8 +21,15 @@ log = logging.getLogger(__name__)
 
 
 async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
-    log.error("Unexpected error", exc_info=exc)
-    return JSONResponse(status_code=500, content={"detail": "Unexpected server error"})
+    request_id = request.headers.get("X-Request-Id")
+    log.error("Unexpected error, request_id: %r", request_id, exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Unexpected server error",
+            "request_id": request_id,
+        },
+    )
 
 
 async def user_already_exists_handler(request: Request, exc: Exception) -> JSONResponse:

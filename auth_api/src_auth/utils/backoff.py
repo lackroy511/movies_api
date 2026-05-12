@@ -31,12 +31,12 @@ class Backoff:
                     delay = self.start_delay
                     return result
                 except self.exceptions as e:
-                    log.exception("Backoff for exception:")
                     await asyncio.sleep(delay)
                     if delay < self.max_delay:
                         delay *= self.factor
 
                     if delay >= self.max_delay:
+                        log.exception("Error after Backoff retries:")
                         raise e
 
         return wrapper
