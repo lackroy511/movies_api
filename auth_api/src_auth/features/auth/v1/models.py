@@ -12,6 +12,7 @@ class TokenVersion(Base):
         Uuid,
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
+        unique=True,
     )
     version: Mapped[int] = mapped_column(
         Integer,
