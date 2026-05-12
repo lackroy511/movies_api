@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, model_validator, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class ChangeEmailRequest(BaseModel):
     email: EmailStr
+    current_password: str
 
 
 class ChangePasswordRequest(BaseModel):

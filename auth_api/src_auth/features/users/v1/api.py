@@ -37,7 +37,11 @@ async def change_email(
     token_payload: Annotated[TokenPayload, Depends(get_current_user_payload)],
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> StatusResponse:
-    await user_service.change_email(UUID(token_payload.user_id), request.email)
+    await user_service.change_email(
+        UUID(token_payload.user_id),
+        request.email,
+        request.current_password,
+    )
     return StatusResponse(status="success")
 
 

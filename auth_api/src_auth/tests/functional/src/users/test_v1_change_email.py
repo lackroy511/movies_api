@@ -23,7 +23,10 @@ async def test_change_email_success(
     }
     _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
 
-    change_payload = {"email": "new-email@example.com"}
+    change_payload = {
+        "email": "new-email@example.com",
+        "current_password": "Password123!",
+    }
     body, status, _ = await make_request(
         "PATCH",
         "/v1/users/me/change-email",
@@ -63,7 +66,7 @@ async def test_change_email_conflict(
     }
     _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
 
-    change_payload = {"email": "user2@example.com"}
+    change_payload = {"email": "user2@example.com", "current_password": "Password123!"}
     body, status, _ = await make_request(
         "PATCH",
         "/v1/users/me/change-email",
@@ -73,6 +76,40 @@ async def test_change_email_conflict(
 
     assert status == 409
     assert body["detail"] == "User already exists"
+
+
+async def test_change_email_wrong_password(
+    make_request: MakeRequestType,
+    clear_users_table: None,
+) -> None:
+    register_payload = {
+        "email": "user1@example.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "password": "Password123!",
+        "password_confirm": "Password123!",
+    }
+    await make_request("POST", "/v1/register", data=register_payload)
+
+    login_payload = {
+        "email": "user1@example.com",
+        "password": "Password123!",
+    }
+    _, _, cookies = await make_request("POST", "/v1/login", data=login_payload)
+
+    change_payload = {
+        "email": "new-email@example.com",
+        "current_password": "wrong-password",
+    }
+    body, status, _ = await make_request(
+        "PATCH",
+        "/v1/users/me/change-email",
+        data=change_payload,
+        cookies=cookies,
+    )
+
+    assert status == 401
+    assert body["detail"] == "Invalid credentials"
 
 
 async def test_change_email_unauthorized(
@@ -93,7 +130,10 @@ async def test_change_email_unauthorized(
 @pytest.mark.parametrize(
     "payload, expected_error",
     [
-        ({"email": "not-an-email"}, "value is not a valid email address"),
+        (
+            {"email": "not-an-email", "current_password": "somepass"},
+            "value is not a valid email address",
+        ),
         ({}, "Field required"),
     ],
 )

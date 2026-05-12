@@ -67,7 +67,18 @@ class UserService:
     async def get_auth_history(self, user_id: UUID) -> list[UserAuthHistoryDTO]:
         return await self.repository.get_auth_history(user_id)
 
-    async def change_email(self, user_id: UUID, new_email: str) -> None:
+    async def change_email(
+        self,
+        user_id: UUID,
+        new_email: str,
+        current_password: str,
+    ) -> None:
+        user = await self.get_user_by_id(user_id)
+        if user.password_hash is not None:
+            if not verify_password(current_password, user.password_hash):
+                raise InvalidCredentialsError("Invalid credentials")
+        else:
+            raise InvalidCredentialsError("Invalid credentials")
         await self.repository.update_email(user_id, new_email)
 
     async def change_password(
